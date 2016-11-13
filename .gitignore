@@ -1,0 +1,11 @@
+app
+bin
+issues
+node_modules/*
+obj
+dist/*
+tests/*
+tsproject.js
+*.dat
+*.njsproj.user
+*.njsproj.vspscc
