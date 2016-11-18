@@ -1,21 +1,25 @@
-﻿[![npm version](https://badge.fury.io/js/tsproject.svg)](http://badge.fury.io/js/tsproject)
-﻿[![Build Status](https://travis-ci.org/ToddThomson/tsproject.svg?branch=master)](https://travis-ci.org/ToddThomson/tsproject)
-# TsMinify
-TsMinify is a Typescript minifier.
+﻿[![npm version](https://badge.fury.io/js/tsminifier.svg)](http://badge.fury.io/js/tsminifier)
+﻿[![Build Status](https://travis-ci.org/ToddThomson/tsminifier.svg?branch=master)](https://travis-ci.org/ToddThomson/tsminifier)
+# TsMinifier
+TsMinifier is a Typescript minifier.
 
 ## Top Features
 
-* Typescript source file minification with identifier shortening and whitespace removal.
+* Typescript minifier with identifier mangling and whitespace removal.
 
 ## How to install
 
 ```
-npm install tsminify
+npm install tsminifier
 ```
 
 ## API
 
-    tsminify.src( projectConfigPath: string, settings: any )
+	tsminifier.minify( fileName: string, settings: any )
+
+	tsminifier.minifySourceFile( file: ts.SourceFile, program: ts.Program, options: ts.CompilerOptions )
+
+    tsminifier.minifyProject( projectConfigPath: string, settings: any )
 
 Where:
 
@@ -23,12 +27,12 @@ Where:
 Or,
 **projectConfigPath** is a relative path to a named Typescript project file.   
 
-## Building TsMinifyProject
+## Building TsMinifier
 
-TsMinify depends on [NPM](https://docs.npmjs.com/) as a package manager and 
+TsMinifier depends on [NPM](https://docs.npmjs.com/) as a package manager and 
 [Gulp](https://github.com/gulpjs/gulp/blob/master/docs/getting-started.md) as a build tool. 
 If you haven't already, you'll need to install both these tools in order to 
-build TsMinify.
+build TsMinifier.
 
 Once Gulp is installed, you can build it with the following commands:
 

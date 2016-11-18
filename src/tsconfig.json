@@ -1,0 +1,48 @@
+{
+    "compilerOptions": {
+        "target": "es5",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "declaration": false,
+        "diagnostics": true,
+        "listFiles": false,
+        "pretty": true,
+        "noEmitOnError": false,
+        "noImplicitAny": false,
+        "preserveConstEnums": true,
+        "removeComments": false,
+        "sourceMap": false,
+        "noEmit": false
+    },
+    "files": [
+        "./Ast/Ast.ts",
+        "./Ast/AstTransform.ts",
+        "./Ast/NodeWalker.ts",
+        "./Compiler/Compiler.ts",
+        "./Minifier/Minifier.ts",
+        "./Minifier/MinifierOptions.ts",
+        "./Minifier/ContainerContext.ts",
+        "./Minifier/IdentifierSymbolInfo.ts",
+        "./Minifier/NameGenerator.ts",
+        "./Project/ProjectConfig.ts",
+        "./Project/ProjectHelpers.ts",
+        "./Reporting/DiagnosticsReporter.ts",
+        "./Reporting/Logger.ts",
+        "./Reporting/StatisticsReporter.ts",
+        "./Utils/Debug.ts",
+        "./Utils/TsCore.ts",
+        "./Utils/Utilities.ts",
+        "./TsMinifier.ts"
+    ],
+    "bundles": {
+        "tsMinifier": {
+            "files": [ "./TsMinifier.ts" ],
+            "config": {
+                "package": "component",
+                "packageNamespace": "TsMinifier",
+                "outDir": "./bundle",
+                "minify": false
+            }
+        }
+    }
+}
