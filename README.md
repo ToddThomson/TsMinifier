@@ -1,11 +1,11 @@
 ﻿[![npm version](https://badge.fury.io/js/tsminifier.svg)](http://badge.fury.io/js/tsminifier)
 ﻿[![Build Status](https://travis-ci.org/ToddThomson/tsminifier.svg?branch=master)](https://travis-ci.org/ToddThomson/tsminifier)
 # TsMinifier
-TsMinifier is a Typescript minifier.
+TsMinifier is a Typescript minifier providing identifier mangling and whitespace removal.
 
-## Top Features
+## PRERELEASE NOTICE
 
-* Typescript minifier with identifier mangling and whitespace removal.
+TsMinifier is a prerelease package. TsMinifier is the result of decoupling the minification code from TsProject and is currently a work in progress. Please continue to use TsProject for now.
 
 ## How to install
 
@@ -15,11 +15,11 @@ npm install tsminifier
 
 ## API
 
-	tsminifier.minify( fileName: string, settings: any )
+	tsminifier.minify( fileName: string, compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions )
 
 	tsminifier.minifySourceFile( file: ts.SourceFile, program: ts.Program, options: ts.CompilerOptions )
 
-    tsminifier.minifyProject( projectConfigPath: string, settings: any )
+    tsminifier.minifyProject( projectConfigPath: string, minifierOptions: MinifierOptions )
 
 Where:
 
