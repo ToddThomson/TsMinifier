@@ -13,20 +13,41 @@ TsMinifier is a prerelease package. TsMinifier is the result of decoupling the m
 npm install tsminifier
 ```
 
-## API
+## Node API
+```
+    interface MinifierOptions {
+        moduleFileName?: string;
+        mangleIdentifiers?: boolean;
+        removeWhitespace?: boolean;
+        packageNamespace?: string;
+    }
 
-	tsminifier.minify( fileName: string, compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions )
+    interface MinifierOutput {
+        fileName: string;
+        output?: string;
+        mapText?: string;
+        dtsText?: string;
+        diagnostics?: ts.Diagnostic[];
+    }
+ 
+    interface ProjectConfig {
+        success: boolean;
+        compilerOptions?: ts.CompilerOptions;
+        fileNames?: string[];
+        errors?: ts.Diagnostic[];
+    }
+	
+	function minify( fileNames: string[], compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions): MinifierOutput[];
 
-	tsminifier.minifySourceFile( file: ts.SourceFile, program: ts.Program, options: ts.CompilerOptions )
+    function minifyModule( input: string, compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions): MinifierOutput;
 
-    tsminifier.minifyProject( projectConfigPath: string, minifierOptions: MinifierOptions )
+    function minifyProject( configFilePath: string, minifierOptions: MinifierOptions): MinifierOutput[];
 
-Where:
+    function minifySourceFile( file: ts.SourceFile, program: ts.Program, compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions): ts.SourceFile;
 
-**projectConfigPath** is a relative directory path to the default Typescript project file named "tsconfig.json".
-Or,
-**projectConfigPath** is a relative path to a named Typescript project file.   
+    function getProjectConfig( configFilePath: string ): ProjectConfig;
 
+```
 ## Building TsMinifier
 
 TsMinifier depends on [NPM](https://docs.npmjs.com/) as a package manager and 

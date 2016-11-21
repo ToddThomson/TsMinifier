@@ -2,12 +2,21 @@
 
 declare namespace TsMinifier {
 
-    interface MinifyOutput {
-        outputText: string;
-        diagnostics?: ts.Diagnostic[];
-        sourceMapText?: string;
+    interface MinifierOptions {
+        moduleFileName?: string;
+        mangleIdentifiers?: boolean;
+        removeWhitespace?: boolean;
+        packageNamespace?: string;
     }
 
+    interface MinifierOutput {
+        fileName: string;
+        output?: string;
+        mapText?: string;
+        dtsText?: string;
+        diagnostics?: ts.Diagnostic[];
+    }
+ 
     interface ProjectConfig {
         success: boolean;
         compilerOptions?: ts.CompilerOptions;
@@ -15,13 +24,16 @@ declare namespace TsMinifier {
         errors?: ts.Diagnostic[];
     }
 
-    function minify(fileName: string, options: ts.CompilerOptions): MinifyOutput;
+    function minify(fileNames: string[], compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions): MinifierOutput[];
 
-    function minifyProject(configFilePath: string): void;
+    function minifyModule(input: string, compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions): MinifierOutput;
 
-    function minifySourceFile(file: ts.SourceFile, program: ts.Program, options: ts.CompilerOptions): ts.SourceFile;
+    function minifyProject(configFilePath: string, minifierOptions: MinifierOptions): MinifierOutput[];
+
+    function minifySourceFile(file: ts.SourceFile, program: ts.Program, compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions): ts.SourceFile;
 
     function getProjectConfig(configFilePath: string): ProjectConfig;
+
 }
 
 export = TsMinifier;

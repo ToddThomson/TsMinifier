@@ -50,7 +50,9 @@
     <TypeScriptCompile Include="src\Ast\Ast.ts" />
     <TypeScriptCompile Include="src\Ast\AstTransform.ts" />
     <TypeScriptCompile Include="src\Ast\NodeWalker.ts" />
-    <TypeScriptCompile Include="src\Compiler\Compiler.ts" />
+    <TypeScriptCompile Include="src\Minifier\CompileOutput.ts" />
+    <TypeScriptCompile Include="src\Minifier\MinifyingCompiler.ts" />
+    <TypeScriptCompile Include="src\Minifier\CachingCompilerHost.ts" />
     <TypeScriptCompile Include="src\Minifier\Minifier.ts" />
     <TypeScriptCompile Include="src\Minifier\ContainerContext.ts" />
     <TypeScriptCompile Include="src\Minifier\IdentifierSymbolInfo.ts" />
@@ -73,7 +75,6 @@
     <Folder Include="src\" />
     <Folder Include="src\Ast\" />
     <Folder Include="src\Minifier\" />
-    <Folder Include="src\Compiler\" />
     <Folder Include="src\Project\" />
     <Folder Include="src\Reporting\" />
     <Folder Include="src\Utils\" />

@@ -1,5 +1,7 @@
 ﻿import { ProjectConfig } from "./Project/ProjectConfig";
 import { Minifier } from "./Minifier/Minifier";
+import { MinifierOptions } from "./Minifier/MinifierOptions";
+import { MinifyingCompiler } from "./Minifier/MinifyingCompiler";
 import { Logger } from "./Reporting/Logger";
 import { TsCore } from "./Utils/TsCore";
 import { Utils } from "./Utils/Utilities";
@@ -10,42 +12,42 @@ import * as path from "path";
 
 namespace TsMinifier {
 
-    export interface MinifyOutput {
-        outputText: string;
+    export interface MinifierOutput {
+        fileName: string;
+        output?: string;
+        mapText?: string;
+        dtsText?: string;
         diagnostics?: ts.Diagnostic[];
-        sourceMapText?: string;
     }
 
-    export function minify( fileName: string, options: ts.CompilerOptions ): MinifyOutput {
+    export function minify( fileNames: string[], compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions  ): MinifierOutput[] {
+        var output: string = "";
 
-        const program = ts.createProgram( [fileName], options );
+        const compiler = new MinifyingCompiler( compilerOptions, minifierOptions );
 
-        const minifier = new Minifier( program, options, { mangleIdentifiers: true, removeWhitespace: true } ); 
-        
-        // Parse a file
-        let sourceFile = ts.createSourceFile(fileName, fs.readFileSync(fileName).toString(), options.target, /*setParentNodes */ true);
-        
-        const minSourceFile = minifier.transform( sourceFile );
-
-        return {
-            outputText: undefined,
-            diagnostics: undefined,
-            sourceMapText: undefined
-        };
+        return compiler.compile( fileNames );
     }
 
-    export function minifyProject( configFilePath: string ): void {
+    export function minifyModule( input: string, compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions  ): MinifierOutput {
+
+        const compiler = new MinifyingCompiler( compilerOptions, minifierOptions );
+
+        return compiler.compileModule( input );
+    }
+
+    export function minifyProject( configFilePath: string, minifierOptions: MinifierOptions ): MinifierOutput[] {
         let config = getProjectConfig( configFilePath );
+
+        return minify( config.fileNames, config.compilerOptions, minifierOptions )
     }
 
-    export function minifySourceFile( file: ts.SourceFile, program: ts.Program, options: ts.CompilerOptions ): ts.SourceFile {
-        const minifier = new Minifier( program, options, {} );
+    export function minifySourceFile( file: ts.SourceFile, program: ts.Program, compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions ): ts.SourceFile {
+        const minifier = new Minifier( program, compilerOptions, minifierOptions );
 
-        var minFile = minifier.transform( file );
-        
-        return minFile;
+        return minifier.transform( file );
     }
 
+    // TODO: Move this
     export function getProjectConfig( configFilePath: string ): ProjectConfig {
         var configFileDir: string;
         var configFileName: string;

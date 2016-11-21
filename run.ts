@@ -2,6 +2,6 @@
 
 var projectSettings = TsMinifier.getProjectConfig( "./src/tsconfig.json" );
 
-var minFile = TsMinifier.minify( "./run.ts", projectSettings.compilerOptions );
+var minFile = TsMinifier.minify( ["./run.ts"], projectSettings.compilerOptions, {} );
 
-console.log( "Minified file text: ", minFile.outputText );
+console.log( "Minified file text: ", minFile[0].output );
