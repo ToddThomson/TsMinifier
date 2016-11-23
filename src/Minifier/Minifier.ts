@@ -9,6 +9,7 @@ import { NameGenerator } from "./NameGenerator";
 import { Container } from "./ContainerContext";
 import { IdentifierInfo } from "./IdentifierSymbolInfo";
 import { MinifierOptions } from "./MinifierOptions";
+import { MinifierStatistics } from "./MinifierStatistics";
 import { Debug } from "../Utils/Debug";
 import { Utils } from "../Utils/Utilities";
 import { TsCore } from "../Utils/TsCore";
@@ -26,11 +27,11 @@ export class Minifier extends NodeWalker implements AstTransform {
     private sourceFileContainer: Container;
     private nameGenerator: NameGenerator;
 
-    private whiteSpaceBefore: number;
-    private whiteSpaceAfter: number;
+    private whiteSpaceBefore: number = 0;
+    private whiteSpaceAfter: number = 0;
 
-    private whiteSpaceTime: number;
-    private transformTime: number;
+    private whiteSpaceTime: number = 0;
+    private transformTime: number = 0;
 
     private identifierCount = 0;
     private shortenedIdentifierCount = 0;
@@ -194,6 +195,18 @@ export class Minifier extends NodeWalker implements AstTransform {
         //    this.reportWhitespaceStatistics();
 
         return output;
+    }
+
+    public getStatistics(): MinifierStatistics {
+        return {
+            whiteSpaceBefore: this.whiteSpaceBefore,
+            whiteSpaceAfter: this.whiteSpaceAfter,
+            whiteSpaceTime: this.whiteSpaceTime,
+
+            identifierCount: this.identifierCount,
+            mangledIdentifierCount: this.shortenedIdentifierCount,
+            transformTime: this.transformTime
+        }
     }
 
     protected visitNode( node: ts.Node ): void {
@@ -446,6 +459,8 @@ export class Minifier extends NodeWalker implements AstTransform {
     }
 
     private canShortenIdentifier( identifierInfo: IdentifierInfo ): boolean {
+        if ( identifierInfo.hasNoMangleAnnotation() )
+            return false;
 
         if ( identifierInfo.isBlockScopedVariable() ||
             identifierInfo.isFunctionScopedVariable() ||

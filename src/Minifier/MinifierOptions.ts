@@ -2,5 +2,5 @@
     moduleFileName?: string;
     mangleIdentifiers?: boolean;
     removeWhitespace?: boolean;
-    packageNamespace?: string;
+    externalNamespace?: string;
 }

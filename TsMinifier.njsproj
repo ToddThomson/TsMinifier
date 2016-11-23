@@ -51,6 +51,7 @@
     <TypeScriptCompile Include="src\Ast\AstTransform.ts" />
     <TypeScriptCompile Include="src\Ast\NodeWalker.ts" />
     <TypeScriptCompile Include="src\Minifier\CompileOutput.ts" />
+    <TypeScriptCompile Include="src\Minifier\MinifierStatistics.ts" />
     <TypeScriptCompile Include="src\Minifier\MinifyingCompiler.ts" />
     <TypeScriptCompile Include="src\Minifier\CachingCompilerHost.ts" />
     <TypeScriptCompile Include="src\Minifier\Minifier.ts" />
@@ -59,7 +60,6 @@
     <TypeScriptCompile Include="src\Minifier\MinifierOptions.ts" />
     <TypeScriptCompile Include="src\Minifier\NameGenerator.ts" />
     <TypeScriptCompile Include="src\Project\ProjectConfig.ts" />
-    <TypeScriptCompile Include="src\Project\ProjectHelpers.ts" />
     <TypeScriptCompile Include="src\Reporting\DiagnosticsReporter.ts" />
     <TypeScriptCompile Include="src\Reporting\Logger.ts" />
     <TypeScriptCompile Include="src\Reporting\StatisticsReporter.ts" />

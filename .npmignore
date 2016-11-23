@@ -13,7 +13,9 @@ typings
 .npmignore
 .travis.yml
 gulpfile.js
-rundbg.js
+run.js
+run.d.ts
+run.js.map
 TsProjectTodoMVC
 ReactTodoMVC
 *.dat

@@ -6,7 +6,7 @@ declare namespace TsMinifier {
         moduleFileName?: string;
         mangleIdentifiers?: boolean;
         removeWhitespace?: boolean;
-        packageNamespace?: string;
+        externalNamespace?: string;
     }
 
     interface MinifierOutput {
@@ -32,8 +32,9 @@ declare namespace TsMinifier {
 
     function minifySourceFile(file: ts.SourceFile, program: ts.Program, compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions): ts.SourceFile;
 
-    function getProjectConfig(configFilePath: string): ProjectConfig;
-
+    namespace ProjectHelper {
+        function getProjectConfig(configFilePath: string): ProjectConfig;
+    }
 }
 
 export = TsMinifier;

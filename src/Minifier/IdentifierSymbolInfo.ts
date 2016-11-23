@@ -3,6 +3,7 @@ import { Container } from "./ContainerContext";
 import { Ast } from "../Ast/Ast";
 import { MinifierOptions } from "./MinifierOptions";
 import { Utils } from "../Utils/Utilities";
+import { TsCore } from "../Utils/TsCore";
 import { Logger } from "../Reporting/Logger";
 
 export class IdentifierInfo {
@@ -106,6 +107,15 @@ export class IdentifierInfo {
         return false;
     }
 
+    public hasNoMangleAnnotation() {
+        // Scan through the symbol documentation for our @nomangle annotation
+        const comments: ts.SymbolDisplayPart[] = this.symbol.getDocumentationComment();
+
+        return Utils.forEach( comments, ( comment: ts.SymbolDisplayPart ) => {
+            return comment.text.indexOf("@nomangle") >= 0;
+        });
+    }
+
     public isInternalClass(): boolean {
         
         // TJT: Review - should use the same export "override" logic as in isInternalFunction
@@ -134,13 +144,13 @@ export class IdentifierInfo {
                 }
 
                 // Override export flag if function is not in our special package namespace.
-                if ( minifierOptions.packageNamespace ) {
+                if ( minifierOptions.externalNamespace ) {
                     let node: ts.Node = this.symbol.valueDeclaration;
                     while ( node ) {
                         if ( node.flags & ts.NodeFlags.Namespace ) {
                             let nodeNamespaceName: string = (<any>node).name.text;
 
-                            if ( nodeNamespaceName !== minifierOptions.packageNamespace ) {
+                            if ( nodeNamespaceName !== minifierOptions.externalNamespace ) {
                                 return true;
                             }
                         }

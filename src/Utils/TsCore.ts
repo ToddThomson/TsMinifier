@@ -28,6 +28,13 @@ export namespace TsCore {
         return false;
     }
 
+    export function getSourceFileOfNode( node: ts.Node): ts.SourceFile {
+        while ( node && node.kind !== ts.SyntaxKind.SourceFile) {
+            node = node.parent;
+        }
+        return <ts.SourceFile>node;
+    }
+
     export function getSourceFileFromSymbol( symbol: ts.Symbol ): ts.SourceFile {
         const declarations = symbol.getDeclarations();
         

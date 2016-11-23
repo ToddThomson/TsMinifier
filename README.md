@@ -19,7 +19,7 @@ npm install tsminifier
         moduleFileName?: string;
         mangleIdentifiers?: boolean;
         removeWhitespace?: boolean;
-        packageNamespace?: string;
+        externalNamespace?: string;
     }
 
     interface MinifierOutput {
@@ -45,7 +45,7 @@ npm install tsminifier
 
     function minifySourceFile( file: ts.SourceFile, program: ts.Program, compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions): ts.SourceFile;
 
-    function getProjectConfig( configFilePath: string ): ProjectConfig;
+    function ProjectHelper.getProjectConfig( configFilePath: string ): ProjectConfig;
 
 ```
 ## Building TsMinifier

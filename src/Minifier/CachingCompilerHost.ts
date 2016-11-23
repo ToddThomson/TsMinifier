@@ -29,7 +29,6 @@ export class CachingCompilerHost implements ts.CompilerHost {
     }
 
     public getSourceFileImpl( fileName: string, languageVersion: ts.ScriptTarget, onError?: ( message: string ) => void ): ts.SourceFile {
-
         // Use baseHost to get the source file
         return this.baseHost.getSourceFile( fileName, languageVersion, onError );
     }
