@@ -1,5 +1,5 @@
 ﻿[![npm version](https://badge.fury.io/js/tsminifier.svg)](http://badge.fury.io/js/tsminifier)
-﻿[![Build Status](https://travis-ci.org/ToddThomson/tsminifier.svg?branch=master)](https://travis-ci.org/ToddThomson/tsminifier)
+﻿[![Build Status](https://travis-ci.org/ToddThomson/TsMinifier.svg?branch=master)](https://travis-ci.org/ToddThomson/TsMinifier)
 # TsMinifier
 TsMinifier is a Typescript minifier providing identifier mangling and whitespace removal.
 
