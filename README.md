@@ -24,6 +24,7 @@ npm install tsminifier
 
     interface MinifierOutput {
         fileName: string;
+		text: string;
         output?: string;
         mapText?: string;
         dtsText?: string;

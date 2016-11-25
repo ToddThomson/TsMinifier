@@ -2,8 +2,9 @@
 
 export interface CompileOutput {
     fileName: string;
+    text?: string;
     output?: string;
     dtsText?: string;
     mapText?: string;
-    diagnostics?: ts.Diagnostic[];
+    diagnostics: ts.Diagnostic[];
 }

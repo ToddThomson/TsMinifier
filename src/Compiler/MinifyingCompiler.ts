@@ -1,7 +1,8 @@
 ﻿import { CompileOutput } from "./CompileOutput";
 import { CachingCompilerHost } from "./CachingCompilerHost";
 import { Minifier } from "../Minifier/Minifier";
-import { MinifierOptions } from "./MinifierOptions";
+import { MinifierOptions } from "../Minifier/MinifierOptions";
+import { format } from "../Utils/formatter";
 import { TsCore } from "../Utils/TsCore";
 
 import * as ts from "typescript";
@@ -20,7 +21,8 @@ export class MinifyingCompiler {
     }
   
     public compileModule( input: string ): CompileOutput {
-
+        var defaultGetSourceFile: ( fileName: string, languageVersion: ts.ScriptTarget, onError?: ( message: string ) => void ) => ts.SourceFile;
+        
         function getSourceFile( fileName: string, languageVersion: ts.ScriptTarget, onError?: ( message: string ) => void ): ts.SourceFile {
             if ( fileName === moduleFileName ) {
                 return moduleSourceFile;
@@ -31,13 +33,15 @@ export class MinifyingCompiler {
         }
 
         // Override the compileHost getSourceFile() function to get the bundle source file
-        const defaultGetSourceFile = this.compilerHost.getSourceFile;
+        defaultGetSourceFile = this.compilerHost.getSourceFile;
         this.compilerHost.getSourceFile = getSourceFile;
 
         const moduleFileName = this.minifierOptions.moduleFileName || ( this.compilerOptions.jsx ? "module.tsx" : "module.ts");
         const moduleSourceFile = ts.createSourceFile( moduleFileName, input, this.compilerOptions.target );
 
-        return this.compileImpl( [moduleFileName] )[0];
+        const compileOutput = this.compileImpl( [moduleFileName] );
+        
+        return compileOutput[0];
     }
 
     public compile( fileNames: string[] ): CompileOutput[] {
@@ -49,17 +53,43 @@ export class MinifyingCompiler {
         var outputText: string = "";
         var mapText: string = "";
         var dtsText: string = "";
+        var formattedText: string;
 
-        const program = ts.createProgram( fileNames, this.compilerOptions, this.compilerHost );
+        if ( !this.compilerOptions ) {
+            this.compilerOptions = ts.getDefaultCompilerOptions();
+        }
+        
+        // Modify compiler options for the minifiers purposes
+        const options = this.compilerOptions;
 
-        var preEmitDiagnostics = ts.getPreEmitDiagnostics( program );
+        options.noEmit = undefined;
+        options.noEmitOnError = true;
+        options.declaration = undefined;
+        options.declarationDir = undefined;
+        options.out = undefined;
+        options.outFile = undefined;
+
+        const program = ts.createProgram( fileNames, options, this.compilerHost );
 
         const minifier = new Minifier( program, this.compilerOptions, this.minifierOptions );
 
         for ( const fileNameIndex in fileNames ) {
             var sourceFile = program.getSourceFile( fileNames[ fileNameIndex ] );
             
-            const minSourceFile = minifier.transform( sourceFile );
+            var preEmitDiagnostics = ts.getPreEmitDiagnostics( program, sourceFile );
+
+            if ( preEmitDiagnostics.length > 0 ) {
+                output.push( { fileName: fileNames[ fileNameIndex ], diagnostics: preEmitDiagnostics } );
+                
+                continue;
+            }
+
+            if ( this.minifierOptions.mangleIdentifiers ) {
+                const minSourceFile = minifier.transform( sourceFile );
+                
+                // Prettify the minified source file text
+                formattedText = format( minSourceFile );
+            }
 
             const emitResult = program.emit( sourceFile, (fileName: string, content: string) => {
                 if ( TsCore.fileExtensionIs( fileName, ".js" ) || TsCore.fileExtensionIs( fileName, ".jsx" ) ) {
@@ -78,10 +108,11 @@ export class MinifyingCompiler {
 
             const minifyOutput: CompileOutput = {
                 fileName: fileNames[ fileNameIndex ],
+                text: formattedText,
                 output: outputText,
                 mapText: mapText,
                 dtsText: dtsText,
-                diagnostics: preEmitDiagnostics
+                diagnostics: []
             };
 
             output.push( minifyOutput );

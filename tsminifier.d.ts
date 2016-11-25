@@ -11,6 +11,7 @@ declare namespace TsMinifier {
 
     interface MinifierOutput {
         fileName: string;
+        text?: string;
         output?: string;
         mapText?: string;
         dtsText?: string;
@@ -30,7 +31,7 @@ declare namespace TsMinifier {
 
     function minifyProject(configFilePath: string, minifierOptions: MinifierOptions): MinifierOutput[];
 
-    function minifySourceFile(file: ts.SourceFile, program: ts.Program, compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions): ts.SourceFile;
+    //function minifySourceFile(file: ts.SourceFile, program: ts.Program, compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions): ts.SourceFile;
 
     namespace ProjectHelper {
         function getProjectConfig(configFilePath: string): ProjectConfig;

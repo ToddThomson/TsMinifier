@@ -28,12 +28,10 @@ export class CachingCompilerHost implements ts.CompilerHost {
         return this.output;
     }
 
-    public getSourceFileImpl( fileName: string, languageVersion: ts.ScriptTarget, onError?: ( message: string ) => void ): ts.SourceFile {
+    public getSourceFile = ( fileName: string, languageVersion: ts.ScriptTarget, onError?: ( message: string ) => void ): ts.SourceFile => {
         // Use baseHost to get the source file
         return this.baseHost.getSourceFile( fileName, languageVersion, onError );
     }
-
-    public getSourceFile = this.getSourceFileImpl;
 
     public writeFile( fileName: string, data: string, writeByteOrderMark: boolean, onError?: ( message: string ) => void ) {
         this.output[ fileName ] = data;

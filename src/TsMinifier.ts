@@ -1,7 +1,7 @@
 ﻿import { ProjectConfig, Project } from "./Project/ProjectConfig";
 import { Minifier } from "./Minifier/Minifier";
 import { MinifierOptions } from "./Minifier/MinifierOptions";
-import { MinifyingCompiler } from "./Minifier/MinifyingCompiler";
+import { MinifyingCompiler } from "./Compiler/MinifyingCompiler";
 import { Logger } from "./Reporting/Logger";
 import { Utils } from "./Utils/Utilities";
 
@@ -11,6 +11,7 @@ namespace TsMinifier {
 
     export interface MinifierOutput {
         fileName: string;
+        text?: string;
         output?: string;
         mapText?: string;
         dtsText?: string;
@@ -35,7 +36,7 @@ namespace TsMinifier {
         return minify( config.fileNames, config.compilerOptions, minifierOptions )
     }
 
-    export function minifySourceFile( file: ts.SourceFile, program: ts.Program, compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions ): ts.SourceFile {
+    export function minifyTransform( file: ts.SourceFile, program: ts.Program, compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions ): ts.SourceFile {
         const minifier = new Minifier( program, compilerOptions, minifierOptions );
 
         return minifier.transform( file );

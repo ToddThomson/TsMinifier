@@ -49,7 +49,6 @@ export class Minifier extends NodeWalker implements AstTransform {
     }
 
     public transform( sourceFile: ts.SourceFile ): ts.SourceFile {
-
         this.sourceFile = sourceFile;
 
         return this.minify( sourceFile );

@@ -971,7 +971,10 @@ var CachingCompilerHost = (function () {
         this.fileExistsCache = {};
         this.fileExistsCacheSize = 0;
         this.fileReadCache = {};
-        this.getSourceFile = this.getSourceFileImpl;
+        this.getSourceFile = function (fileName, languageVersion, onError) {
+            // Use baseHost to get the source file
+            return _this.baseHost.getSourceFile(fileName, languageVersion, onError);
+        };
         this.fileExists = function (fileName) {
             fileName = _this.getCanonicalFileName(fileName);
             // Prune off searches on directories that don't exist
@@ -991,10 +994,6 @@ var CachingCompilerHost = (function () {
     }
     CachingCompilerHost.prototype.getOutput = function () {
         return this.output;
-    };
-    CachingCompilerHost.prototype.getSourceFileImpl = function (fileName, languageVersion, onError) {
-        // Use baseHost to get the source file
-        return this.baseHost.getSourceFile(fileName, languageVersion, onError);
     };
     CachingCompilerHost.prototype.writeFile = function (fileName, data, writeByteOrderMark, onError) {
         this.output[fileName] = data;
@@ -1627,6 +1626,46 @@ var Minifier = (function (_super) {
     };
     return Minifier;
 }(NodeWalker));
+function format(sourceFile) {
+    var settings = getDefaultFormatCodeSettings();
+    // Get the formatting edits on the input sources
+    var edits = ts.formatting.formatDocument(sourceFile, getRuleProvider(settings), settings);
+    return applyEdits(sourceFile.getText(), edits);
+    function getRuleProvider(settings) {
+        var ruleProvider = new ts.formatting.RulesProvider();
+        ruleProvider.ensureUpToDate(settings);
+        return ruleProvider;
+    }
+    function applyEdits(text, edits) {
+        var result = text;
+        for (var i = edits.length - 1; i >= 0; i--) {
+            var change = edits[i];
+            var head = result.slice(0, change.span.start);
+            var tail = result.slice(change.span.start + change.span.length);
+            result = head + change.newText + tail;
+        }
+        return result;
+    }
+    function getDefaultFormatCodeSettings() {
+        return {
+            indentSize: 4,
+            tabSize: 4,
+            indentStyle: ts.IndentStyle.Smart,
+            newLineCharacter: "\r\n",
+            convertTabsToSpaces: true,
+            insertSpaceAfterCommaDelimiter: true,
+            insertSpaceAfterSemicolonInForStatements: true,
+            insertSpaceBeforeAndAfterBinaryOperators: true,
+            insertSpaceAfterKeywordsInControlFlowStatements: true,
+            insertSpaceAfterFunctionKeywordForAnonymousFunctions: false,
+            insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis: false,
+            insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets: false,
+            insertSpaceAfterOpeningAndBeforeClosingTemplateStringBraces: false,
+            placeOpenBraceOnNewLineForFunctions: false,
+            placeOpenBraceOnNewLineForControlBlocks: false,
+        };
+    }
+}
 var Project = (function () {
     function Project() {
     }
@@ -1675,6 +1714,7 @@ var MinifyingCompiler = (function () {
         this.compilerHost = new CachingCompilerHost(compilerOptions);
     }
     MinifyingCompiler.prototype.compileModule = function (input) {
+        var defaultGetSourceFile;
         function getSourceFile(fileName, languageVersion, onError) {
             if (fileName === moduleFileName) {
                 return moduleSourceFile;
@@ -1683,11 +1723,12 @@ var MinifyingCompiler = (function () {
             return defaultGetSourceFile(fileName, languageVersion, onError);
         }
         // Override the compileHost getSourceFile() function to get the bundle source file
-        var defaultGetSourceFile = this.compilerHost.getSourceFile;
+        defaultGetSourceFile = this.compilerHost.getSourceFile;
         this.compilerHost.getSourceFile = getSourceFile;
         var moduleFileName = this.minifierOptions.moduleFileName || (this.compilerOptions.jsx ? "module.tsx" : "module.ts");
         var moduleSourceFile = ts.createSourceFile(moduleFileName, input, this.compilerOptions.target);
-        return this.compileImpl([moduleFileName])[0];
+        var compileOutput = this.compileImpl([moduleFileName]);
+        return compileOutput[0];
     };
     MinifyingCompiler.prototype.compile = function (fileNames) {
         return this.compileImpl(fileNames);
@@ -1697,12 +1738,32 @@ var MinifyingCompiler = (function () {
         var outputText = "";
         var mapText = "";
         var dtsText = "";
-        var program = ts.createProgram(fileNames, this.compilerOptions, this.compilerHost);
-        var preEmitDiagnostics = ts.getPreEmitDiagnostics(program);
+        var formattedText;
+        if (!this.compilerOptions) {
+            this.compilerOptions = ts.getDefaultCompilerOptions();
+        }
+        // Modify compiler options for the minifiers purposes
+        var options = this.compilerOptions;
+        options.noEmit = undefined;
+        options.noEmitOnError = true;
+        options.declaration = undefined;
+        options.declarationDir = undefined;
+        options.out = undefined;
+        options.outFile = undefined;
+        var program = ts.createProgram(fileNames, options, this.compilerHost);
         var minifier = new Minifier(program, this.compilerOptions, this.minifierOptions);
         for (var fileNameIndex in fileNames) {
             var sourceFile = program.getSourceFile(fileNames[fileNameIndex]);
-            var minSourceFile = minifier.transform(sourceFile);
+            var preEmitDiagnostics = ts.getPreEmitDiagnostics(program, sourceFile);
+            if (preEmitDiagnostics.length > 0) {
+                output.push({ fileName: fileNames[fileNameIndex], diagnostics: preEmitDiagnostics });
+                continue;
+            }
+            if (this.minifierOptions.mangleIdentifiers) {
+                var minSourceFile = minifier.transform(sourceFile);
+                // Prettify the minified source file text
+                formattedText = format(minSourceFile);
+            }
             var emitResult = program.emit(sourceFile, function (fileName, content) {
                 if (TsCore.fileExtensionIs(fileName, ".js") || TsCore.fileExtensionIs(fileName, ".jsx")) {
                     outputText = content;
@@ -1720,10 +1781,11 @@ var MinifyingCompiler = (function () {
             }
             var minifyOutput = {
                 fileName: fileNames[fileNameIndex],
+                text: formattedText,
                 output: outputText,
                 mapText: mapText,
                 dtsText: dtsText,
-                diagnostics: preEmitDiagnostics
+                diagnostics: []
             };
             output.push(minifyOutput);
         }
@@ -1748,11 +1810,11 @@ var TsMinifier;
         return minify(config.fileNames, config.compilerOptions, minifierOptions);
     }
     TsMinifier.minifyProject = minifyProject;
-    function minifySourceFile(file, program, compilerOptions, minifierOptions) {
+    function minifyTransform(file, program, compilerOptions, minifierOptions) {
         var minifier = new Minifier(program, compilerOptions, minifierOptions);
         return minifier.transform(file);
     }
-    TsMinifier.minifySourceFile = minifySourceFile;
+    TsMinifier.minifyTransform = minifyTransform;
     var ProjectHelper;
     (function (ProjectHelper) {
         function getProjectConfig(configFilePath) {
