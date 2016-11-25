@@ -4,7 +4,7 @@ var projectSettings = TsMinifier.ProjectHelper.getProjectConfig( "./src/tsconfig
 
 var sourceText: string = 'import * as ts from "typescript"; import * as TsMinifier from "./src/tsminifier"; var projectSettings = TsMinifier.ProjectHelper.getProjectConfig( "./src/tsconfig.json" );';
 
-var minModule = TsMinifier.minifyModule( sourceText, projectSettings.compilerOptions, { mangleIdentifiers: true, removeWhitespace: true } );
+var minModule = TsMinifier.minifyModule( sourceText, "module.ts", projectSettings.compilerOptions, { mangleIdentifiers: true, removeWhitespace: true } );
 var minFiles = TsMinifier.minify( ["./run.ts", "./src/TsMinifier.ts"], projectSettings.compilerOptions, { mangleIdentifiers: true, removeWhitespace: true } );
 
 console.log( "Minified module text: \n", minModule.text );

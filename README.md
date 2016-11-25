@@ -16,7 +16,6 @@ npm install tsminifier
 ## Node API
 ```
     interface MinifierOptions {
-        moduleFileName?: string;
         mangleIdentifiers?: boolean;
         removeWhitespace?: boolean;
         externalNamespace?: string;
@@ -24,29 +23,21 @@ npm install tsminifier
 
     interface MinifierOutput {
         fileName: string;
-		text: string;
+		emitSkipped: boolean;
+		text?: string;
         output?: string;
         mapText?: string;
         dtsText?: string;
-        diagnostics?: ts.Diagnostic[];
+        diagnostics: ts.Diagnostic[];
     }
  
-    interface ProjectConfig {
-        success: boolean;
-        compilerOptions?: ts.CompilerOptions;
-        fileNames?: string[];
-        errors?: ts.Diagnostic[];
-    }
-	
 	function minify( fileNames: string[], compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions): MinifierOutput[];
 
     function minifyModule( input: string, compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions): MinifierOutput;
 
     function minifyProject( configFilePath: string, minifierOptions: MinifierOptions): MinifierOutput[];
 
-    function minifySourceFile( file: ts.SourceFile, program: ts.Program, compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions): ts.SourceFile;
-
-    function ProjectHelper.getProjectConfig( configFilePath: string ): ProjectConfig;
+    function ProjectHelper.getProjectConfig( configFilePath: string ): ts.ProjectConfig;
 
 ```
 ## Building TsMinifier

@@ -2,8 +2,6 @@
 import { Minifier } from "./Minifier/Minifier";
 import { MinifierOptions } from "./Minifier/MinifierOptions";
 import { MinifyingCompiler } from "./Compiler/MinifyingCompiler";
-import { Logger } from "./Reporting/Logger";
-import { Utils } from "./Utils/Utilities";
 
 import * as ts from "typescript";
 
@@ -11,6 +9,7 @@ namespace TsMinifier {
 
     export interface MinifierOutput {
         fileName: string;
+        emitSkipped: boolean;
         text?: string;
         output?: string;
         mapText?: string;
@@ -24,10 +23,10 @@ namespace TsMinifier {
         return compiler.compile( fileNames );
     }
 
-    export function minifyModule( input: string, compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions  ): MinifierOutput {
+    export function minifyModule( input: string, moduleFileName: string, compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions  ): MinifierOutput {
         const compiler = new MinifyingCompiler( compilerOptions, minifierOptions );
 
-        return compiler.compileModule( input );
+        return compiler.compileModule( input, moduleFileName );
     }
 
     export function minifyProject( configFilePath: string, minifierOptions: MinifierOptions ): MinifierOutput[] {

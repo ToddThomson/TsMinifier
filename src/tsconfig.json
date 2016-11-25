@@ -18,7 +18,6 @@
         "./Ast/Ast.ts",
         "./Ast/AstTransform.ts",
         "./Ast/NodeWalker.ts",
-        "./Compiler/CachingCompilerHost.ts",
         "./Compiler/CompileOutput.ts",
         "./Compiler/MinifyingCompiler.ts",
         "./Minifier/Minifier.ts",
@@ -38,7 +37,7 @@
         "./TsMinifier.ts"
     ],
     "bundles": {
-        "tsMinifier": {
+        "tsminifier": {
             "files": [ "./TsMinifier.ts" ],
             "config": {
                 "package": "component",

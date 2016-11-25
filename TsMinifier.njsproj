@@ -53,7 +53,6 @@
     <TypeScriptCompile Include="src\Compiler\CompileOutput.ts" />
     <TypeScriptCompile Include="src\Minifier\MinifierStatistics.ts" />
     <TypeScriptCompile Include="src\Compiler\MinifyingCompiler.ts" />
-    <TypeScriptCompile Include="src\Compiler\CachingCompilerHost.ts" />
     <TypeScriptCompile Include="src\Minifier\Minifier.ts" />
     <TypeScriptCompile Include="src\Minifier\ContainerContext.ts" />
     <TypeScriptCompile Include="src\Minifier\IdentifierSymbolInfo.ts" />

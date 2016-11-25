@@ -8,6 +8,7 @@ var ts = require("typescript");
 var fs = require("fs");
 var path = require("path");
 var chalk = require("chalk");
+var tscompiler = require("ts2js");
 var TsCore;
 (function (TsCore) {
     function fileExtensionIs(path, extension) {
@@ -962,76 +963,6 @@ var Debug;
     }
     Debug.assert = assert;
 })(Debug || (Debug = {}));
-var CachingCompilerHost = (function () {
-    function CachingCompilerHost(compilerOptions) {
-        var _this = this;
-        this.output = {};
-        this.dirExistsCache = {};
-        this.dirExistsCacheSize = 0;
-        this.fileExistsCache = {};
-        this.fileExistsCacheSize = 0;
-        this.fileReadCache = {};
-        this.getSourceFile = function (fileName, languageVersion, onError) {
-            // Use baseHost to get the source file
-            return _this.baseHost.getSourceFile(fileName, languageVersion, onError);
-        };
-        this.fileExists = function (fileName) {
-            fileName = _this.getCanonicalFileName(fileName);
-            // Prune off searches on directories that don't exist
-            if (!_this.directoryExists(path.dirname(fileName))) {
-                return false;
-            }
-            if (Utils.hasProperty(_this.fileExistsCache, fileName)) {
-                //Logger.trace( "fileExists() Cache hit: ", fileName, this.fileExistsCache[ fileName ] );
-                return _this.fileExistsCache[fileName];
-            }
-            _this.fileExistsCacheSize++;
-            //Logger.trace( "fileExists() Adding to cache: ", fileName, this.baseHost.fileExists( fileName ), this.fileExistsCacheSize );
-            return _this.fileExistsCache[fileName] = _this.baseHost.fileExists(fileName);
-        };
-        this.compilerOptions = compilerOptions;
-        this.baseHost = ts.createCompilerHost(this.compilerOptions);
-    }
-    CachingCompilerHost.prototype.getOutput = function () {
-        return this.output;
-    };
-    CachingCompilerHost.prototype.writeFile = function (fileName, data, writeByteOrderMark, onError) {
-        this.output[fileName] = data;
-    };
-    CachingCompilerHost.prototype.readFile = function (fileName) {
-        if (Utils.hasProperty(this.fileReadCache, fileName)) {
-            return this.fileReadCache[fileName];
-        }
-        return this.fileReadCache[fileName] = this.baseHost.readFile(fileName);
-    };
-    // Use Typescript CompilerHost "base class" implementation..
-    CachingCompilerHost.prototype.getDefaultLibFileName = function (options) {
-        return this.baseHost.getDefaultLibFileName(options);
-    };
-    CachingCompilerHost.prototype.getCurrentDirectory = function () {
-        return this.baseHost.getCurrentDirectory();
-    };
-    CachingCompilerHost.prototype.getDirectories = function (path) {
-        return this.baseHost.getDirectories(path);
-    };
-    CachingCompilerHost.prototype.getCanonicalFileName = function (fileName) {
-        return this.baseHost.getCanonicalFileName(fileName);
-    };
-    CachingCompilerHost.prototype.useCaseSensitiveFileNames = function () {
-        return this.baseHost.useCaseSensitiveFileNames();
-    };
-    CachingCompilerHost.prototype.getNewLine = function () {
-        return this.baseHost.getNewLine();
-    };
-    CachingCompilerHost.prototype.directoryExists = function (directoryPath) {
-        if (Utils.hasProperty(this.dirExistsCache, directoryPath)) {
-            return this.dirExistsCache[directoryPath];
-        }
-        this.dirExistsCacheSize++;
-        return this.dirExistsCache[directoryPath] = ts.sys.directoryExists(directoryPath);
-    };
-    return CachingCompilerHost;
-}());
 var Minifier = (function (_super) {
     __extends(Minifier, _super);
     function Minifier(program, compilerOptions, minifierOptions) {
@@ -1707,41 +1638,18 @@ var Project = (function () {
     };
     return Project;
 }());
-var MinifyingCompiler = (function () {
+var MinifyingCompiler = (function (_super) {
+    __extends(MinifyingCompiler, _super);
     function MinifyingCompiler(compilerOptions, minifierOptions) {
-        this.compilerOptions = compilerOptions;
+        _super.call(this, compilerOptions);
         this.minifierOptions = minifierOptions;
-        this.compilerHost = new CachingCompilerHost(compilerOptions);
     }
-    MinifyingCompiler.prototype.compileModule = function (input) {
-        var defaultGetSourceFile;
-        function getSourceFile(fileName, languageVersion, onError) {
-            if (fileName === moduleFileName) {
-                return moduleSourceFile;
-            }
-            // Use base class to get the all source files other than the module
-            return defaultGetSourceFile(fileName, languageVersion, onError);
-        }
-        // Override the compileHost getSourceFile() function to get the bundle source file
-        defaultGetSourceFile = this.compilerHost.getSourceFile;
-        this.compilerHost.getSourceFile = getSourceFile;
-        var moduleFileName = this.minifierOptions.moduleFileName || (this.compilerOptions.jsx ? "module.tsx" : "module.ts");
-        var moduleSourceFile = ts.createSourceFile(moduleFileName, input, this.compilerOptions.target);
-        var compileOutput = this.compileImpl([moduleFileName]);
-        return compileOutput[0];
-    };
-    MinifyingCompiler.prototype.compile = function (fileNames) {
-        return this.compileImpl(fileNames);
-    };
     MinifyingCompiler.prototype.compileImpl = function (fileNames) {
         var output = [];
-        var outputText = "";
-        var mapText = "";
-        var dtsText = "";
+        var outputText;
+        var mapText;
+        var dtsText;
         var formattedText;
-        if (!this.compilerOptions) {
-            this.compilerOptions = ts.getDefaultCompilerOptions();
-        }
         // Modify compiler options for the minifiers purposes
         var options = this.compilerOptions;
         options.noEmit = undefined;
@@ -1755,8 +1663,12 @@ var MinifyingCompiler = (function () {
         for (var fileNameIndex in fileNames) {
             var sourceFile = program.getSourceFile(fileNames[fileNameIndex]);
             var preEmitDiagnostics = ts.getPreEmitDiagnostics(program, sourceFile);
+            // We don't emit on errors - what's the point!?!
             if (preEmitDiagnostics.length > 0) {
-                output.push({ fileName: fileNames[fileNameIndex], diagnostics: preEmitDiagnostics });
+                output.push({
+                    fileName: fileNames[fileNameIndex],
+                    emitSkipped: true,
+                    diagnostics: preEmitDiagnostics });
                 continue;
             }
             if (this.minifierOptions.mangleIdentifiers) {
@@ -1775,24 +1687,25 @@ var MinifyingCompiler = (function () {
                     mapText = content;
                 }
             });
-            if (this.minifierOptions.removeWhitespace) {
+            if (!emitResult.emitSkipped && this.minifierOptions.removeWhitespace) {
                 // Whitespace removal cannot be performed in the AST minification transform, so we do it here for now
                 outputText = minifier.removeWhitespace(outputText);
             }
             var minifyOutput = {
                 fileName: fileNames[fileNameIndex],
+                emitSkipped: emitResult.emitSkipped,
                 text: formattedText,
                 output: outputText,
                 mapText: mapText,
                 dtsText: dtsText,
-                diagnostics: []
+                diagnostics: emitResult.diagnostics
             };
             output.push(minifyOutput);
         }
         return output;
     };
     return MinifyingCompiler;
-}());
+}(tscompiler.Compiler));
 var TsMinifier;
 (function (TsMinifier) {
     function minify(fileNames, compilerOptions, minifierOptions) {
@@ -1800,9 +1713,9 @@ var TsMinifier;
         return compiler.compile(fileNames);
     }
     TsMinifier.minify = minify;
-    function minifyModule(input, compilerOptions, minifierOptions) {
+    function minifyModule(input, moduleFileName, compilerOptions, minifierOptions) {
         var compiler = new MinifyingCompiler(compilerOptions, minifierOptions);
-        return compiler.compileModule(input);
+        return compiler.compileModule(input, moduleFileName);
     }
     TsMinifier.minifyModule = minifyModule;
     function minifyProject(configFilePath, minifierOptions) {
