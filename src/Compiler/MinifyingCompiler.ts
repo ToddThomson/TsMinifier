@@ -1,7 +1,6 @@
-﻿import { CompileOutput } from "./CompileOutput";
+﻿import { CompilerOutput, CompilerResult } from "ts2js";
 import { Minifier } from "../Minifier/Minifier";
 import { MinifierOptions } from "../Minifier/MinifierOptions";
-import { format } from "../Utils/formatter";
 import { TsCore } from "../Utils/TsCore";
 
 import * as ts from "typescript";
@@ -12,37 +11,44 @@ export class MinifyingCompiler extends tscompiler.Compiler {
 
     private minifierOptions: MinifierOptions;
 
-    constructor( compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions ) {
-        super( compilerOptions );
+    constructor( compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions, host?: ts.CompilerHost ) {
+        super( compilerOptions, host );
 
         this.minifierOptions = minifierOptions;
     }
   
-    protected compileImpl( fileNames: string[] ): CompileOutput[] {
-        var output: CompileOutput[] = [];
+    protected emit(): CompilerResult {
+        var output: CompilerOutput[] = [];
         var outputText: string;
         var mapText: string;
         var dtsText: string;
-        var formattedText: string;
 
         // Modify compiler options for the minifiers purposes
-        const options = this.compilerOptions;
+        const options = this.options;
 
         options.noEmit = undefined;
-        options.noEmitOnError = true;
         options.declaration = undefined;
         options.declarationDir = undefined;
         options.out = undefined;
         options.outFile = undefined;
 
-        const program = ts.createProgram( fileNames, options, this.compilerHost );
+        var allDiagnostics = ts.getPreEmitDiagnostics( this.program );
+                    
+        if ( this.options.noEmitOnError && ( preEmitDiagnostics.length > 0 ) ) {
+            return { 
+                diagnostics: allDiagnostics,
+                emitSkipped: true 
+            }; 
+        }
 
-        const minifier = new Minifier( program, this.compilerOptions, this.minifierOptions );
+        const fileNames = this.program.getRootFileNames();
+
+        const minifier = new Minifier( this.program, this.options, this.minifierOptions );
 
         for ( const fileNameIndex in fileNames ) {
-            var sourceFile = program.getSourceFile( fileNames[ fileNameIndex ] );
+            var sourceFile = this.program.getSourceFile( fileNames[ fileNameIndex ] );
             
-            var preEmitDiagnostics = ts.getPreEmitDiagnostics( program, sourceFile );
+            var preEmitDiagnostics = ts.getPreEmitDiagnostics( this.program, sourceFile );
 
             // We don't emit on errors - what's the point!?!
             if ( preEmitDiagnostics.length > 0 ) {
@@ -54,14 +60,7 @@ export class MinifyingCompiler extends tscompiler.Compiler {
                 continue;
             }
 
-            if ( this.minifierOptions.mangleIdentifiers ) {
-                const minSourceFile = minifier.transform( sourceFile );
-                
-                // Prettify the minified source file text
-                formattedText = format( minSourceFile );
-            }
-
-            const emitResult = program.emit( sourceFile, (fileName: string, content: string) => {
+            const emitResult = this.program.emit( sourceFile, (fileName: string, content: string) => {
                 if ( TsCore.fileExtensionIs( fileName, ".js" ) || TsCore.fileExtensionIs( fileName, ".jsx" ) ) {
                     outputText = content;
                 } else if ( TsCore.fileExtensionIs( fileName, "d.ts" ) ) {
@@ -76,11 +75,10 @@ export class MinifyingCompiler extends tscompiler.Compiler {
                 outputText = minifier.removeWhitespace( outputText );
             }
 
-            const minifyOutput: CompileOutput = {
+            const minifyOutput: CompilerOutput = {
                 fileName: fileNames[ fileNameIndex ],
                 emitSkipped: emitResult.emitSkipped,
-                text: formattedText,
-                output: outputText,
+                text: outputText,
                 mapText: mapText,
                 dtsText: dtsText,
                 diagnostics: emitResult.diagnostics
@@ -89,6 +87,10 @@ export class MinifyingCompiler extends tscompiler.Compiler {
             output.push( minifyOutput );
         }
 
-        return output;
+        return {
+            emitSkipped: false,
+            emitOutput: output,
+            diagnostics: allDiagnostics
+        }
     }
 }

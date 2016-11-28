@@ -3,29 +3,39 @@
 # TsMinifier
 TsMinifier is a Typescript minifier providing identifier mangling and whitespace removal.
 
-## PRERELEASE NOTICE
+## Top Features
 
-TsMinifier is a prerelease package. TsMinifier is the result of decoupling the minification code from TsProject and is currently a work in progress. Please continue to use TsProject for now.
-
-## How to install
-
-```
-npm install tsminifier
-```
+* Minifies Typescript files directly.
 
 ## Node API
+
+TsMinifier exposes a Minifier class and several direct minify functions.
+
 ```
+	class Minifier {
+        constructor(program: ts.Program, compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions);
+    
+		// Public Methods
+	    transform(sourceFile: ts.SourceFile): ts.SourceFile;
+        removeWhitespace(jsContents: string): string;
+    }
+
     interface MinifierOptions {
         mangleIdentifiers?: boolean;
         removeWhitespace?: boolean;
         externalNamespace?: string;
     }
 
-    interface MinifierOutput {
+	interface MinifierResult {
+        emitSkipped: boolean;
+        emitOutput?: CompilerOutput[];
+        diagnostics: ts.Diagnostic[];
+    }
+
+    interface CompilerOutput {
         fileName: string;
 		emitSkipped: boolean;
 		text?: string;
-        output?: string;
         mapText?: string;
         dtsText?: string;
         diagnostics: ts.Diagnostic[];
@@ -37,9 +47,18 @@ npm install tsminifier
 
     function minifyProject( configFilePath: string, minifierOptions: MinifierOptions): MinifierOutput[];
 
+	function prettify( input: string ): string;
+
     function ProjectHelper.getProjectConfig( configFilePath: string ): ts.ProjectConfig;
 
 ```
+
+## How to install
+
+```
+npm install tsminifier
+```
+
 ## Building TsMinifier
 
 TsMinifier depends on [NPM](https://docs.npmjs.com/) as a package manager and 

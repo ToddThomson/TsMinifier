@@ -1,7 +1,9 @@
 ﻿import * as ts from "typescript";
 
-export function format( sourceFile: ts.SourceFile ): string {
+export function format( input: string ): string {
     var settings = getDefaultFormatCodeSettings();
+
+    const sourceFile = ts.createSourceFile( "file.js", input, ts.ScriptTarget.Latest );
 
     // Get the formatting edits on the input sources
     var edits = (ts as any).formatting.formatDocument( sourceFile, getRuleProvider( settings ), settings );

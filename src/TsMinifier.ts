@@ -2,43 +2,49 @@
 import { Minifier } from "./Minifier/Minifier";
 import { MinifierOptions } from "./Minifier/MinifierOptions";
 import { MinifyingCompiler } from "./Compiler/MinifyingCompiler";
-
+import { format } from "./Utils/formatter";
 import * as ts from "typescript";
 
-namespace TsMinifier {
+export { MinifierOptions }
+export { ProjectConfig }
 
-    export interface MinifierOutput {
+export namespace TsMinifier {
+
+    export interface CompilerOutput {
         fileName: string;
         emitSkipped: boolean;
+        diagnostics: ts.Diagnostic[];
         text?: string;
-        output?: string;
-        mapText?: string;
         dtsText?: string;
-        diagnostics?: ts.Diagnostic[];
+        mapText?: string;
+    }   
+
+    export interface MinifierResult {
+        emitSkipped: boolean;
+        diagnostics: ts.Diagnostic[];
+        emitOutput?: CompilerOutput[];
     }
 
-    export function minify( fileNames: string[], compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions  ): MinifierOutput[] {
+    export function minify( fileNames: string[], compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions  ): MinifierResult {
         const compiler = new MinifyingCompiler( compilerOptions, minifierOptions );
 
         return compiler.compile( fileNames );
     }
 
-    export function minifyModule( input: string, moduleFileName: string, compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions  ): MinifierOutput {
+    export function minifyModule( input: string, moduleFileName: string, compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions  ): MinifierResult {
         const compiler = new MinifyingCompiler( compilerOptions, minifierOptions );
 
         return compiler.compileModule( input, moduleFileName );
     }
 
-    export function minifyProject( configFilePath: string, minifierOptions: MinifierOptions ): MinifierOutput[] {
+    export function minifyProject( configFilePath: string, minifierOptions: MinifierOptions ): MinifierResult {
         const config = Project.getProjectConfig( configFilePath );
 
         return minify( config.fileNames, config.compilerOptions, minifierOptions )
     }
 
-    export function minifyTransform( file: ts.SourceFile, program: ts.Program, compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions ): ts.SourceFile {
-        const minifier = new Minifier( program, compilerOptions, minifierOptions );
-
-        return minifier.transform( file );
+    export function prettify( input: string ): string {
+        return format( input );
     }
 
     export namespace ProjectHelper {
@@ -48,4 +54,7 @@ namespace TsMinifier {
     }
 }
 
-export = TsMinifier;
+exports.Minifier = Minifier;
+exports.TsMinifier = TsMinifier;
+
+module.exports = exports;

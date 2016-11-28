@@ -1557,46 +1557,6 @@ var Minifier = (function (_super) {
     };
     return Minifier;
 }(NodeWalker));
-function format(sourceFile) {
-    var settings = getDefaultFormatCodeSettings();
-    // Get the formatting edits on the input sources
-    var edits = ts.formatting.formatDocument(sourceFile, getRuleProvider(settings), settings);
-    return applyEdits(sourceFile.getText(), edits);
-    function getRuleProvider(settings) {
-        var ruleProvider = new ts.formatting.RulesProvider();
-        ruleProvider.ensureUpToDate(settings);
-        return ruleProvider;
-    }
-    function applyEdits(text, edits) {
-        var result = text;
-        for (var i = edits.length - 1; i >= 0; i--) {
-            var change = edits[i];
-            var head = result.slice(0, change.span.start);
-            var tail = result.slice(change.span.start + change.span.length);
-            result = head + change.newText + tail;
-        }
-        return result;
-    }
-    function getDefaultFormatCodeSettings() {
-        return {
-            indentSize: 4,
-            tabSize: 4,
-            indentStyle: ts.IndentStyle.Smart,
-            newLineCharacter: "\r\n",
-            convertTabsToSpaces: true,
-            insertSpaceAfterCommaDelimiter: true,
-            insertSpaceAfterSemicolonInForStatements: true,
-            insertSpaceBeforeAndAfterBinaryOperators: true,
-            insertSpaceAfterKeywordsInControlFlowStatements: true,
-            insertSpaceAfterFunctionKeywordForAnonymousFunctions: false,
-            insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis: false,
-            insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets: false,
-            insertSpaceAfterOpeningAndBeforeClosingTemplateStringBraces: false,
-            placeOpenBraceOnNewLineForFunctions: false,
-            placeOpenBraceOnNewLineForControlBlocks: false,
-        };
-    }
-}
 var Project = (function () {
     function Project() {
     }
@@ -1640,29 +1600,34 @@ var Project = (function () {
 }());
 var MinifyingCompiler = (function (_super) {
     __extends(MinifyingCompiler, _super);
-    function MinifyingCompiler(compilerOptions, minifierOptions) {
-        _super.call(this, compilerOptions);
+    function MinifyingCompiler(compilerOptions, minifierOptions, host) {
+        _super.call(this, compilerOptions, host);
         this.minifierOptions = minifierOptions;
     }
-    MinifyingCompiler.prototype.compileImpl = function (fileNames) {
+    MinifyingCompiler.prototype.emit = function () {
         var output = [];
         var outputText;
         var mapText;
         var dtsText;
-        var formattedText;
         // Modify compiler options for the minifiers purposes
-        var options = this.compilerOptions;
+        var options = this.options;
         options.noEmit = undefined;
-        options.noEmitOnError = true;
         options.declaration = undefined;
         options.declarationDir = undefined;
         options.out = undefined;
         options.outFile = undefined;
-        var program = ts.createProgram(fileNames, options, this.compilerHost);
-        var minifier = new Minifier(program, this.compilerOptions, this.minifierOptions);
+        var allDiagnostics = ts.getPreEmitDiagnostics(this.program);
+        if (this.options.noEmitOnError && (preEmitDiagnostics.length > 0)) {
+            return {
+                diagnostics: allDiagnostics,
+                emitSkipped: true
+            };
+        }
+        var fileNames = this.program.getRootFileNames();
+        var minifier = new Minifier(this.program, this.options, this.minifierOptions);
         for (var fileNameIndex in fileNames) {
-            var sourceFile = program.getSourceFile(fileNames[fileNameIndex]);
-            var preEmitDiagnostics = ts.getPreEmitDiagnostics(program, sourceFile);
+            var sourceFile = this.program.getSourceFile(fileNames[fileNameIndex]);
+            var preEmitDiagnostics = ts.getPreEmitDiagnostics(this.program, sourceFile);
             // We don't emit on errors - what's the point!?!
             if (preEmitDiagnostics.length > 0) {
                 output.push({
@@ -1671,12 +1636,7 @@ var MinifyingCompiler = (function (_super) {
                     diagnostics: preEmitDiagnostics });
                 continue;
             }
-            if (this.minifierOptions.mangleIdentifiers) {
-                var minSourceFile = minifier.transform(sourceFile);
-                // Prettify the minified source file text
-                formattedText = format(minSourceFile);
-            }
-            var emitResult = program.emit(sourceFile, function (fileName, content) {
+            var emitResult = this.program.emit(sourceFile, function (fileName, content) {
                 if (TsCore.fileExtensionIs(fileName, ".js") || TsCore.fileExtensionIs(fileName, ".jsx")) {
                     outputText = content;
                 }
@@ -1694,18 +1654,62 @@ var MinifyingCompiler = (function (_super) {
             var minifyOutput = {
                 fileName: fileNames[fileNameIndex],
                 emitSkipped: emitResult.emitSkipped,
-                text: formattedText,
-                output: outputText,
+                text: outputText,
                 mapText: mapText,
                 dtsText: dtsText,
                 diagnostics: emitResult.diagnostics
             };
             output.push(minifyOutput);
         }
-        return output;
+        return {
+            emitSkipped: false,
+            emitOutput: output,
+            diagnostics: allDiagnostics
+        };
     };
     return MinifyingCompiler;
 }(tscompiler.Compiler));
+function format(input) {
+    var settings = getDefaultFormatCodeSettings();
+    var sourceFile = ts.createSourceFile("file.js", input, ts.ScriptTarget.Latest);
+    // Get the formatting edits on the input sources
+    var edits = ts.formatting.formatDocument(sourceFile, getRuleProvider(settings), settings);
+    return applyEdits(sourceFile.getText(), edits);
+    function getRuleProvider(settings) {
+        var ruleProvider = new ts.formatting.RulesProvider();
+        ruleProvider.ensureUpToDate(settings);
+        return ruleProvider;
+    }
+    function applyEdits(text, edits) {
+        var result = text;
+        for (var i = edits.length - 1; i >= 0; i--) {
+            var change = edits[i];
+            var head = result.slice(0, change.span.start);
+            var tail = result.slice(change.span.start + change.span.length);
+            result = head + change.newText + tail;
+        }
+        return result;
+    }
+    function getDefaultFormatCodeSettings() {
+        return {
+            indentSize: 4,
+            tabSize: 4,
+            indentStyle: ts.IndentStyle.Smart,
+            newLineCharacter: "\r\n",
+            convertTabsToSpaces: true,
+            insertSpaceAfterCommaDelimiter: true,
+            insertSpaceAfterSemicolonInForStatements: true,
+            insertSpaceBeforeAndAfterBinaryOperators: true,
+            insertSpaceAfterKeywordsInControlFlowStatements: true,
+            insertSpaceAfterFunctionKeywordForAnonymousFunctions: false,
+            insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis: false,
+            insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets: false,
+            insertSpaceAfterOpeningAndBeforeClosingTemplateStringBraces: false,
+            placeOpenBraceOnNewLineForFunctions: false,
+            placeOpenBraceOnNewLineForControlBlocks: false,
+        };
+    }
+}
 var TsMinifier;
 (function (TsMinifier) {
     function minify(fileNames, compilerOptions, minifierOptions) {
@@ -1723,11 +1727,10 @@ var TsMinifier;
         return minify(config.fileNames, config.compilerOptions, minifierOptions);
     }
     TsMinifier.minifyProject = minifyProject;
-    function minifyTransform(file, program, compilerOptions, minifierOptions) {
-        var minifier = new Minifier(program, compilerOptions, minifierOptions);
-        return minifier.transform(file);
+    function prettify(input) {
+        return format(input);
     }
-    TsMinifier.minifyTransform = minifyTransform;
+    TsMinifier.prettify = prettify;
     var ProjectHelper;
     (function (ProjectHelper) {
         function getProjectConfig(configFilePath) {
@@ -1735,5 +1738,7 @@ var TsMinifier;
         }
         ProjectHelper.getProjectConfig = getProjectConfig;
     })(ProjectHelper = TsMinifier.ProjectHelper || (TsMinifier.ProjectHelper = {}));
-})(TsMinifier || (TsMinifier = {}));
-module.exports = TsMinifier;
+})(TsMinifier = exports.TsMinifier || (exports.TsMinifier = {}));
+exports.Minifier = Minifier;
+exports.TsMinifier = TsMinifier;
+module.exports = exports;

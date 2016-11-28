@@ -3,21 +3,26 @@
 declare namespace TsMinifier {
 
     interface MinifierOptions {
-        moduleFileName?: string;
         mangleIdentifiers?: boolean;
         removeWhitespace?: boolean;
         externalNamespace?: string;
     }
 
-    interface MinifierOutput {
+    export interface MinifierResult {
+        emitSkipped: boolean;
+        emitOutput?: CompilerOutput[];
+        diagnostics: ts.Diagnostic[];
+    }
+
+    interface CompilerOutput {
         fileName: string;
+        emitSkipped: boolean;
         text?: string;
-        output?: string;
         mapText?: string;
         dtsText?: string;
-        diagnostics?: ts.Diagnostic[];
+        diagnostics: ts.Diagnostic[];
     }
- 
+
     interface ProjectConfig {
         success: boolean;
         compilerOptions?: ts.CompilerOptions;
@@ -25,14 +30,20 @@ declare namespace TsMinifier {
         errors?: ts.Diagnostic[];
     }
 
-    function minify(fileNames: string[], compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions): MinifierOutput[];
+    class Minifier {
+        constructor(program: ts.Program, compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions);
+        transform(sourceFile: ts.SourceFile): ts.SourceFile;
+        removeWhitespace(jsContents: string): string;
+    }
 
-    function minifyModule(input: string, compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions): MinifierOutput;
+    function minify(fileNames: string[], compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions): MinifierResult;
 
-    function minifyProject(configFilePath: string, minifierOptions: MinifierOptions): MinifierOutput[];
+    function minifyModule(input: string, compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions): MinifierResult;
 
-    //function minifySourceFile(file: ts.SourceFile, program: ts.Program, compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions): ts.SourceFile;
+    function minifyProject(configFilePath: string, minifierOptions: MinifierOptions): MinifierResult;
 
+    function prettify( input: string ): string;
+    
     namespace ProjectHelper {
         function getProjectConfig(configFilePath: string): ProjectConfig;
     }
