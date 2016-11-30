@@ -3,26 +3,20 @@ import { Minifier } from "./Minifier/Minifier";
 import { MinifierOptions } from "./Minifier/MinifierOptions";
 import { MinifyingCompiler } from "./Compiler/MinifyingCompiler";
 import { format } from "./Utils/formatter";
-import * as ts from "typescript";
 
+import * as ts from "typescript";
+import * as tsc from "ts2js";
+
+//export { Minifier }
 export { MinifierOptions }
 export { ProjectConfig }
 
 export namespace TsMinifier {
 
-    export interface CompilerOutput {
-        fileName: string;
-        emitSkipped: boolean;
-        diagnostics: ts.Diagnostic[];
-        text?: string;
-        dtsText?: string;
-        mapText?: string;
-    }   
-
     export interface MinifierResult {
         emitSkipped: boolean;
         diagnostics: ts.Diagnostic[];
-        emitOutput?: CompilerOutput[];
+        emitOutput?: tsc.CompilerOutput[];
     }
 
     export function minify( fileNames: string[], compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions  ): MinifierResult {
@@ -54,7 +48,4 @@ export namespace TsMinifier {
     }
 }
 
-exports.Minifier = Minifier;
-exports.TsMinifier = TsMinifier;
-
-module.exports = exports;
+module.exports = TsMinifier;

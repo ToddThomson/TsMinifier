@@ -13,11 +13,8 @@ typings
 .npmignore
 .travis.yml
 gulpfile.js
-run.js
-run.d.ts
-run.js.map
-TsProjectTodoMVC
-ReactTodoMVC
+run.*
+tsconfig.json
 *.dat
 *.njsproj
 *.njsproj.user

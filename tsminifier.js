@@ -1636,6 +1636,9 @@ var MinifyingCompiler = (function (_super) {
                     diagnostics: preEmitDiagnostics });
                 continue;
             }
+            if (this.minifierOptions.mangleIdentifiers) {
+                sourceFile = minifier.transform(sourceFile);
+            }
             var emitResult = this.program.emit(sourceFile, function (fileName, content) {
                 if (TsCore.fileExtensionIs(fileName, ".js") || TsCore.fileExtensionIs(fileName, ".jsx")) {
                     outputText = content;
@@ -1710,6 +1713,7 @@ function format(input) {
         };
     }
 }
+//export { Minifier }
 var TsMinifier;
 (function (TsMinifier) {
     function minify(fileNames, compilerOptions, minifierOptions) {
@@ -1739,6 +1743,4 @@ var TsMinifier;
         ProjectHelper.getProjectConfig = getProjectConfig;
     })(ProjectHelper = TsMinifier.ProjectHelper || (TsMinifier.ProjectHelper = {}));
 })(TsMinifier = exports.TsMinifier || (exports.TsMinifier = {}));
-exports.Minifier = Minifier;
-exports.TsMinifier = TsMinifier;
-module.exports = exports;
+module.exports = TsMinifier;

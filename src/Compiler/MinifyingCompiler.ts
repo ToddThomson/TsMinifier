@@ -1,5 +1,5 @@
 ﻿import { CompilerOutput, CompilerResult } from "ts2js";
-import { Minifier } from "../Minifier/Minifier";
+import { Minifier } from  "../Minifier/Minifier";
 import { MinifierOptions } from "../Minifier/MinifierOptions";
 import { TsCore } from "../Utils/TsCore";
 
@@ -58,6 +58,10 @@ export class MinifyingCompiler extends tscompiler.Compiler {
                     diagnostics: preEmitDiagnostics } );
                 
                 continue;
+            }
+
+            if ( this.minifierOptions.mangleIdentifiers ) {
+                sourceFile = minifier.transform( sourceFile );
             }
 
             const emitResult = this.program.emit( sourceFile, (fileName: string, content: string) => {

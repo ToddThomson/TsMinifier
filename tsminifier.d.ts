@@ -1,8 +1,9 @@
 ﻿import * as ts from "typescript";
+import * as tsc from "ts2js"
 
 declare namespace TsMinifier {
 
-    interface MinifierOptions {
+    export interface MinifierOptions {
         mangleIdentifiers?: boolean;
         removeWhitespace?: boolean;
         externalNamespace?: string;
@@ -10,43 +11,35 @@ declare namespace TsMinifier {
 
     export interface MinifierResult {
         emitSkipped: boolean;
-        emitOutput?: CompilerOutput[];
+        emitOutput?: tsc.CompilerOutput[];
         diagnostics: ts.Diagnostic[];
     }
 
-    interface CompilerOutput {
-        fileName: string;
-        emitSkipped: boolean;
-        text?: string;
-        mapText?: string;
-        dtsText?: string;
-        diagnostics: ts.Diagnostic[];
-    }
-
-    interface ProjectConfig {
+    export interface ProjectConfig {
         success: boolean;
         compilerOptions?: ts.CompilerOptions;
         fileNames?: string[];
         errors?: ts.Diagnostic[];
     }
 
-    class Minifier {
+    export class Minifier {
         constructor(program: ts.Program, compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions);
         transform(sourceFile: ts.SourceFile): ts.SourceFile;
         removeWhitespace(jsContents: string): string;
     }
 
-    function minify(fileNames: string[], compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions): MinifierResult;
+    export function minify(fileNames: string[], compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions): MinifierResult;
 
-    function minifyModule(input: string, compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions): MinifierResult;
+    export function minifyModule( input: string, fileName: string, compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions): MinifierResult;
 
-    function minifyProject(configFilePath: string, minifierOptions: MinifierOptions): MinifierResult;
+    export function minifyProject(configFilePath: string, minifierOptions: MinifierOptions): MinifierResult;
 
-    function prettify( input: string ): string;
+    export function prettify( input: string ): string;
     
-    namespace ProjectHelper {
-        function getProjectConfig(configFilePath: string): ProjectConfig;
+    export namespace ProjectHelper {
+        export function getProjectConfig(configFilePath: string): ProjectConfig;
     }
 }
 
 export = TsMinifier;
+
