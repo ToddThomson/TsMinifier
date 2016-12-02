@@ -3,7 +3,7 @@
         "target": "es5",
         "module": "commonjs",
         "moduleResolution": "node",
-        "declaration": true,
+        "declaration": false,
         "diagnostics": true,
         "listFiles": false,
         "pretty": true,
@@ -18,7 +18,9 @@
         "./Ast/Ast.ts",
         "./Ast/AstTransform.ts",
         "./Ast/NodeWalker.ts",
+
         "./Compiler/MinifyingCompiler.ts",
+        
         "./Minifier/Minifier.ts",
         "./Minifier/MinifierOptions.ts",
         "./Minifier/MinifierStatistics.ts",
@@ -26,13 +28,16 @@
         "./Minifier/IdentifierSymbolInfo.ts",
         "./Minifier/NameGenerator.ts",
         "./Project/ProjectConfig.ts",
+        
         "./Reporting/DiagnosticsReporter.ts",
         "./Reporting/Logger.ts",
         "./Reporting/StatisticsReporter.ts",
+        
         "./Utils/Debug.ts",
         "./Utils/Formatter.ts",
         "./Utils/TsCore.ts",
         "./Utils/Utilities.ts",
+        
         "./TsMinifier.ts"
     ],
     "bundles": {

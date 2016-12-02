@@ -1606,9 +1606,9 @@ var MinifyingCompiler = (function (_super) {
     }
     MinifyingCompiler.prototype.emit = function () {
         var output = [];
-        var outputText;
-        var mapText;
-        var dtsText;
+        var codeFile;
+        var mapFile;
+        var dtsFile;
         // Modify compiler options for the minifiers purposes
         var options = this.options;
         options.noEmit = undefined;
@@ -1639,27 +1639,28 @@ var MinifyingCompiler = (function (_super) {
             if (this.minifierOptions.mangleIdentifiers) {
                 sourceFile = minifier.transform(sourceFile);
             }
-            var emitResult = this.program.emit(sourceFile, function (fileName, content) {
+            var emitResult = this.program.emit(sourceFile, function (fileName, data, writeByteOrderMark) {
+                var file = { fileName: fileName, data: data, writeByteOrderMark: writeByteOrderMark };
                 if (TsCore.fileExtensionIs(fileName, ".js") || TsCore.fileExtensionIs(fileName, ".jsx")) {
-                    outputText = content;
+                    codeFile = file;
                 }
                 else if (TsCore.fileExtensionIs(fileName, "d.ts")) {
-                    dtsText = content;
+                    dtsFile = file;
                 }
                 else if (TsCore.fileExtensionIs(fileName, ".map")) {
-                    mapText = content;
+                    mapFile = file;
                 }
             });
             if (!emitResult.emitSkipped && this.minifierOptions.removeWhitespace) {
                 // Whitespace removal cannot be performed in the AST minification transform, so we do it here for now
-                outputText = minifier.removeWhitespace(outputText);
+                codeFile.data = minifier.removeWhitespace(codeFile.data);
             }
             var minifyOutput = {
                 fileName: fileNames[fileNameIndex],
                 emitSkipped: emitResult.emitSkipped,
-                text: outputText,
-                mapText: mapText,
-                dtsText: dtsText,
+                codeFile: codeFile,
+                mapFile: mapFile,
+                dtsFile: dtsFile,
                 diagnostics: emitResult.diagnostics
             };
             output.push(minifyOutput);
@@ -1713,9 +1714,12 @@ function format(input) {
         };
     }
 }
-//export { Minifier }
+// Exported types
+;
 var TsMinifier;
 (function (TsMinifier) {
+    //export var Minifier: Minifier = Minifier;
+    exports.TsMinifier.Minifier = Minifier;
     function minify(fileNames, compilerOptions, minifierOptions) {
         var compiler = new MinifyingCompiler(compilerOptions, minifierOptions);
         return compiler.compile(fileNames);
@@ -1743,4 +1747,5 @@ var TsMinifier;
         ProjectHelper.getProjectConfig = getProjectConfig;
     })(ProjectHelper = TsMinifier.ProjectHelper || (TsMinifier.ProjectHelper = {}));
 })(TsMinifier = exports.TsMinifier || (exports.TsMinifier = {}));
+// TJT: Comment out when testing locally.
 module.exports = TsMinifier;

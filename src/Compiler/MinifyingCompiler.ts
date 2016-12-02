@@ -1,4 +1,4 @@
-﻿import { CompilerOutput, CompilerResult } from "ts2js";
+﻿import { CompilerOutput, CompilerResult, CompilerFile } from "ts2js";
 import { Minifier } from  "../Minifier/Minifier";
 import { MinifierOptions } from "../Minifier/MinifierOptions";
 import { TsCore } from "../Utils/TsCore";
@@ -19,9 +19,10 @@ export class MinifyingCompiler extends tscompiler.Compiler {
   
     protected emit(): CompilerResult {
         var output: CompilerOutput[] = [];
-        var outputText: string;
-        var mapText: string;
-        var dtsText: string;
+        
+        var codeFile: CompilerFile;
+        var mapFile: CompilerFile;
+        var dtsFile: CompilerFile;
 
         // Modify compiler options for the minifiers purposes
         const options = this.options;
@@ -64,27 +65,29 @@ export class MinifyingCompiler extends tscompiler.Compiler {
                 sourceFile = minifier.transform( sourceFile );
             }
 
-            const emitResult = this.program.emit( sourceFile, (fileName: string, content: string) => {
+            const emitResult = this.program.emit( sourceFile, (fileName: string, data: string, writeByteOrderMark: boolean ) => {
+                var file: CompilerFile = { fileName: fileName, data: data, writeByteOrderMark: writeByteOrderMark };
+
                 if ( TsCore.fileExtensionIs( fileName, ".js" ) || TsCore.fileExtensionIs( fileName, ".jsx" ) ) {
-                    outputText = content;
+                    codeFile = file;
                 } else if ( TsCore.fileExtensionIs( fileName, "d.ts" ) ) {
-                    dtsText = content;
+                    dtsFile = file;
                 } else if ( TsCore.fileExtensionIs( fileName, ".map" ) ) {
-                    mapText = content;
+                    mapFile = file;
                 }
 		    });
 
             if ( !emitResult.emitSkipped && this.minifierOptions.removeWhitespace ) {
                 // Whitespace removal cannot be performed in the AST minification transform, so we do it here for now
-                outputText = minifier.removeWhitespace( outputText );
+                codeFile.data = minifier.removeWhitespace( codeFile.data );
             }
 
             const minifyOutput: CompilerOutput = {
                 fileName: fileNames[ fileNameIndex ],
                 emitSkipped: emitResult.emitSkipped,
-                text: outputText,
-                mapText: mapText,
-                dtsText: dtsText,
+                codeFile: codeFile,
+                mapFile: mapFile,
+                dtsFile: dtsFile,
                 diagnostics: emitResult.diagnostics
             };
 

@@ -7,17 +7,22 @@ import { format } from "./Utils/formatter";
 import * as ts from "typescript";
 import * as tsc from "ts2js";
 
-//export { Minifier }
-export { MinifierOptions }
-export { ProjectConfig }
+
+// Exported types
+export { ProjectConfig };
+export { MinifierOptions };
+
+export interface MinifierResult {
+    emitSkipped: boolean;
+    diagnostics: ts.Diagnostic[];
+    emitOutput?: tsc.CompilerOutput[];
+};
 
 export namespace TsMinifier {
 
-    export interface MinifierResult {
-        emitSkipped: boolean;
-        diagnostics: ts.Diagnostic[];
-        emitOutput?: tsc.CompilerOutput[];
-    }
+    //export var Minifier: Minifier = Minifier;
+
+    exports.TsMinifier.Minifier = Minifier;
 
     export function minify( fileNames: string[], compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions  ): MinifierResult {
         const compiler = new MinifyingCompiler( compilerOptions, minifierOptions );
@@ -48,4 +53,5 @@ export namespace TsMinifier {
     }
 }
 
+// TJT: Comment out when testing locally.
 module.exports = TsMinifier;

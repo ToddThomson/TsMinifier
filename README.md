@@ -12,6 +12,25 @@ TsMinifier is a Typescript minifier providing identifier mangling and whitespace
 TsMinifier exposes a Minifier class and several direct minify functions.
 
 ```
+	interface ProjectConfig {
+        success: boolean;
+        compilerOptions?: ts.CompilerOptions;
+        fileNames?: string[];
+        errors?: ts.Diagnostic[];
+    }
+
+	interface MinifierOptions {
+        mangleIdentifiers?: boolean;
+        removeWhitespace?: boolean;
+        externalNamespace?: string;
+    }
+
+	interface MinifierResult {
+        emitSkipped: boolean;
+        emitOutput?: ts2js.CompilerOutput[];
+        diagnostics: ts.Diagnostic[];
+    }
+	
 	class Minifier {
         constructor(program: ts.Program, compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions);
     
@@ -20,27 +39,6 @@ TsMinifier exposes a Minifier class and several direct minify functions.
         removeWhitespace(jsContents: string): string;
     }
 
-    interface MinifierOptions {
-        mangleIdentifiers?: boolean;
-        removeWhitespace?: boolean;
-        externalNamespace?: string;
-    }
-
-	interface MinifierResult {
-        emitSkipped: boolean;
-        emitOutput?: CompilerOutput[];
-        diagnostics: ts.Diagnostic[];
-    }
-
-    interface CompilerOutput {
-        fileName: string;
-		emitSkipped: boolean;
-		text?: string;
-        mapText?: string;
-        dtsText?: string;
-        diagnostics: ts.Diagnostic[];
-    }
- 
 	function minify( fileNames: string[], compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions): MinifierOutput[];
 
     function minifyModule( input: string, compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions): MinifierOutput;
@@ -72,4 +70,3 @@ Once Gulp is installed, you can build it with the following commands:
 npm install
 gulp build
 ```  
-
