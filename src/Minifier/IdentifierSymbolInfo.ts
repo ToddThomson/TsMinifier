@@ -132,14 +132,14 @@ export class IdentifierInfo {
 
             // A function has a value declaration
             if ( this.symbol.valueDeclaration.kind === ts.SyntaxKind.FunctionDeclaration ) {
-                let flags = this.symbol.valueDeclaration.flags;
+                let flags = Ast.getModifierFlags( this.symbol.valueDeclaration );
 
                 // If The function is from an extern API or ambient then it cannot be considered internal.
                 if ( Ast.isExportProperty( this.symbol ) || Ast.isAmbientProperty( this.symbol ) ) {
                     return false;
                 }
 
-                if ( !( flags & ts.NodeFlags.Export ) ) {
+                if ( !( flags & ts.ModifierFlags.Export ) ) {
                     return true;
                 }
 
@@ -171,9 +171,9 @@ export class IdentifierInfo {
                 return false;
             }
 
-            let flags = this.symbol.valueDeclaration.flags;
+            let flags = Ast.getModifierFlags( this.symbol.valueDeclaration );
 
-            if ( ( flags & ts.NodeFlags.Private ) > 0 ) {
+            if ( ( flags & ts.ModifierFlags.Private ) > 0 ) {
                 return true;
             }
 
@@ -205,9 +205,9 @@ export class IdentifierInfo {
                 return false;
             }
 
-            let flags = this.symbol.valueDeclaration.flags;
+            let flags = Ast.getModifierFlags( this.symbol.valueDeclaration );
 
-            if ( ( flags & ts.NodeFlags.Private ) > 0 ) {
+            if ( ( flags & ts.ModifierFlags.Private ) > 0 ) {
                 return true;
             }
 

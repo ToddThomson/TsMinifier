@@ -25,7 +25,7 @@
     <OutputPath>.</OutputPath>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <ProjectTypeGuids>{3AF33F2E-1136-4D97-BBB7-1795711AC8B8};{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}</ProjectTypeGuids>
-    <ProjectView>ProjectFiles</ProjectView>
+    <ProjectView>ShowAllFiles</ProjectView>
     <TypeScriptSourceMap>true</TypeScriptSourceMap>
     <TypeScriptModuleKind>CommonJS</TypeScriptModuleKind>
     <EnableTypeScript>true</EnableTypeScript>
@@ -51,14 +51,13 @@
     <TypeScriptCompile Include="src\Ast\AstTransform.ts" />
     <TypeScriptCompile Include="src\Ast\NodeWalker.ts" />
     <TypeScriptCompile Include="src\Minifier\MinifierStatistics.ts" />
-    <TypeScriptCompile Include="src\Compiler\MinifyingCompiler.ts" />
     <TypeScriptCompile Include="src\Minifier\Minifier.ts" />
     <TypeScriptCompile Include="src\Minifier\ContainerContext.ts" />
     <TypeScriptCompile Include="src\Minifier\IdentifierSymbolInfo.ts" />
     <TypeScriptCompile Include="src\Minifier\MinifierOptions.ts" />
     <TypeScriptCompile Include="src\Minifier\NameGenerator.ts" />
+    <TypeScriptCompile Include="src\Transform\MinifierPlugin.ts" />
     <TypeScriptCompile Include="src\Utils\Formatter.ts" />
-    <TypeScriptCompile Include="src\Project\ProjectConfig.ts" />
     <TypeScriptCompile Include="src\Reporting\DiagnosticsReporter.ts" />
     <TypeScriptCompile Include="src\Reporting\Logger.ts" />
     <TypeScriptCompile Include="src\Reporting\StatisticsReporter.ts" />
@@ -74,16 +73,15 @@
     <Folder Include="src\" />
     <Folder Include="src\Ast\" />
     <Folder Include="src\Minifier\" />
-    <Folder Include="src\Compiler\" />
-    <Folder Include="src\Project\" />
+    <Folder Include="src\Transform\" />
     <Folder Include="src\Reporting\" />
     <Folder Include="src\Utils\" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="build\paths.js" />
+    <Compile Include="build\tasks\bundle.js" />
     <Compile Include="build\tasks\build.js" />
     <Compile Include="build\tasks\clean.js" />
-    <Compile Include="build\tasks\watch.js" />
     <Compile Include="gulpfile.js" />
     <Compile Include="tsminifier.js" />
   </ItemGroup>

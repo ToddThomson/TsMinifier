@@ -19,25 +19,24 @@
         "./Ast/AstTransform.ts",
         "./Ast/NodeWalker.ts",
 
-        "./Compiler/MinifyingCompiler.ts",
-        
         "./Minifier/Minifier.ts",
         "./Minifier/MinifierOptions.ts",
         "./Minifier/MinifierStatistics.ts",
         "./Minifier/ContainerContext.ts",
         "./Minifier/IdentifierSymbolInfo.ts",
         "./Minifier/NameGenerator.ts",
-        "./Project/ProjectConfig.ts",
-        
+
         "./Reporting/DiagnosticsReporter.ts",
         "./Reporting/Logger.ts",
         "./Reporting/StatisticsReporter.ts",
-        
+
+        "./Transform/MinifierPlugin.ts",
+
         "./Utils/Debug.ts",
         "./Utils/Formatter.ts",
         "./Utils/TsCore.ts",
         "./Utils/Utilities.ts",
-        
+
         "./TsMinifier.ts"
     ],
     "bundles": {

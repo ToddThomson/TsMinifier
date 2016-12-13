@@ -1,6 +1,6 @@
 {
   "name": "tsminifier",
-  "version": "1.0.0-rc.6",
+  "version": "1.0.0-rc.9",
   "author": "Todd Thomson <todd.thomson@me.com>",
   "description": "Typescript minifier providing identifier mangling and whitespace removal.",
   "license": "MIT",
@@ -9,14 +9,15 @@
   "dependencies": {
     "@types/chalk": "^0.4.31",
     "@types/node": "^6.0.46",
-    "ts2js": "^1.0.0-rc.7",
-    "typescript": "2.0.10"
+    "ts2js": "^1.0.0-rc.12",
+    "typescript": "^2.1.4"
   },
   "devDependencies": {
     "del": "^2.2.2",
     "gulp": "^3.9.1",
     "require-dir": "^0.3.1",
     "run-sequence": "^1.2.2",
+    "tsbundler": "~1.0.0-rc.2",
     "tsproject": "~2.0.2",
     "vinyl-paths": "^2.1.0"
   },
@@ -24,6 +25,8 @@
     "minifier",
     "minify",
     "minification",
+    "transform",
+    "plugin",
     "compile",
     "compiler",
     "typescript",

@@ -1,6 +1,8 @@
-﻿import { TsMinifier } from "./src/tsminifier";
+﻿import * as tsc from "ts2js";
+import { TsMinifier } from "./src/tsminifier";
 
-var projectSettings = TsMinifier.ProjectHelper.getProjectConfig( "./src/tsconfig.json" );
+
+var projectSettings = tsc.ProjectHelper.getProjectConfig( "./src/tsconfig.json" );
 
 var sourceText: string = 'import * as ts from "typescript"; import { TsMinifier } from "./src/tsminifier"; var projectSettings = TsMinifier.ProjectHelper.getProjectConfig( "./src/tsconfig.json" );';
 

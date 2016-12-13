@@ -36,12 +36,12 @@ export class Minifier extends NodeWalker implements AstTransform {
     private identifierCount = 0;
     private shortenedIdentifierCount = 0;
 
-    constructor( program: ts.Program, compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions ) {
+    constructor( program: ts.Program, minifierOptions: MinifierOptions ) {
         super();
 
         this.program = program;
         this.checker = program.getTypeChecker();
-        this.compilerOptions = compilerOptions;
+        this.compilerOptions = program.getCompilerOptions();
         this.minifierOptions = minifierOptions;
 
         this.containerStack = [];

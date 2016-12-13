@@ -6,50 +6,11 @@ TsMinifier is a Typescript minifier providing identifier mangling and whitespace
 ## Top Features
 
 * Minifies Typescript files directly.
+* Transform plugin for [ts2js](https://github.com/ToddThomson/Ts2Js) compiler.
 
-## Node API
+## TsMinifier Wiki
 
-TsMinifier exposes a Minifier class and several direct minify functions.
-
-```
-	interface ProjectConfig {
-        success: boolean;
-        compilerOptions?: ts.CompilerOptions;
-        fileNames?: string[];
-        errors?: ts.Diagnostic[];
-    }
-
-	interface MinifierOptions {
-        mangleIdentifiers?: boolean;
-        removeWhitespace?: boolean;
-        externalNamespace?: string;
-    }
-
-	interface MinifierResult {
-        emitSkipped: boolean;
-        emitOutput?: ts2js.CompilerOutput[];
-        diagnostics: ts.Diagnostic[];
-    }
-	
-	class Minifier {
-        constructor(program: ts.Program, compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions);
-    
-		// Public Methods
-	    transform(sourceFile: ts.SourceFile): ts.SourceFile;
-        removeWhitespace(jsContents: string): string;
-    }
-
-	function minify( fileNames: string[], compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions): MinifierOutput[];
-
-    function minifyModule( input: string, compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions): MinifierOutput;
-
-    function minifyProject( configFilePath: string, minifierOptions: MinifierOptions): MinifierOutput[];
-
-	function prettify( input: string ): string;
-
-    function ProjectHelper.getProjectConfig( configFilePath: string ): ts.ProjectConfig;
-
-```
+Documentation can be found on the TsMinifier [wiki](https://github.com/ToddThomson/TsMinifier/wiki).
 
 ## How to install
 

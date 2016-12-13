@@ -5,119 +5,9 @@ var __extends = (this && this.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var ts = require("typescript");
-var fs = require("fs");
-var path = require("path");
 var chalk = require("chalk");
-var tscompiler = require("ts2js");
-var TsCore;
-(function (TsCore) {
-    function fileExtensionIs(path, extension) {
-        var pathLen = path.length;
-        var extLen = extension.length;
-        return pathLen > extLen && path.substr(pathLen - extLen, extLen) === extension;
-    }
-    TsCore.fileExtensionIs = fileExtensionIs;
-    TsCore.supportedExtensions = [".ts", ".tsx", ".d.ts"];
-    TsCore.moduleFileExtensions = TsCore.supportedExtensions;
-    function isSupportedSourceFileName(fileName) {
-        if (!fileName) {
-            return false;
-        }
-        for (var _i = 0, supportedExtensions_1 = TsCore.supportedExtensions; _i < supportedExtensions_1.length; _i++) {
-            var extension = supportedExtensions_1[_i];
-            if (fileExtensionIs(fileName, extension)) {
-                return true;
-            }
-        }
-        return false;
-    }
-    TsCore.isSupportedSourceFileName = isSupportedSourceFileName;
-    function getSourceFileOfNode(node) {
-        while (node && node.kind !== ts.SyntaxKind.SourceFile) {
-            node = node.parent;
-        }
-        return node;
-    }
-    TsCore.getSourceFileOfNode = getSourceFileOfNode;
-    function getSourceFileFromSymbol(symbol) {
-        var declarations = symbol.getDeclarations();
-        if (declarations && declarations.length > 0) {
-            if (declarations[0].kind === ts.SyntaxKind.SourceFile) {
-                return declarations[0].getSourceFile();
-            }
-        }
-        return undefined;
-    }
-    TsCore.getSourceFileFromSymbol = getSourceFileFromSymbol;
-    function getExternalModuleName(node) {
-        if (node.kind === ts.SyntaxKind.ImportDeclaration) {
-            return node.moduleSpecifier;
-        }
-        if (node.kind === ts.SyntaxKind.ImportEqualsDeclaration) {
-            var reference = node.moduleReference;
-            if (reference.kind === ts.SyntaxKind.ExternalModuleReference) {
-                return reference.expression;
-            }
-        }
-        if (node.kind === ts.SyntaxKind.ExportDeclaration) {
-            return node.moduleSpecifier;
-        }
-        return undefined;
-    }
-    TsCore.getExternalModuleName = getExternalModuleName;
-    function createDiagnostic(message) {
-        var args = [];
-        for (var _i = 1; _i < arguments.length; _i++) {
-            args[_i - 1] = arguments[_i];
-        }
-        // FUTURE: Typescript 1.8.x supports localized diagnostic messages.
-        var textUnique123 = message.message;
-        if (arguments.length > 1) {
-            textUnique123 = formatStringFromArgs(textUnique123, arguments, 1);
-        }
-        return {
-            file: undefined,
-            start: undefined,
-            length: undefined,
-            messageText: textUnique123,
-            category: message.category,
-            code: message.code
-        };
-    }
-    TsCore.createDiagnostic = createDiagnostic;
-    function formatStringFromArgs(text, args, baseIndex) {
-        baseIndex = baseIndex || 0;
-        return text.replace(/{(\d+)}/g, function (match, index) {
-            return args[+index + baseIndex];
-        });
-    }
-    // An alias symbol is created by one of the following declarations:
-    // import <symbol> = ...
-    // import <symbol> from ...
-    // import * as <symbol> from ...
-    // import { x as <symbol> } from ...
-    // export { x as <symbol> } from ...
-    // export = ...
-    // export default ...
-    function isAliasSymbolDeclaration(node) {
-        return node.kind === ts.SyntaxKind.ImportEqualsDeclaration ||
-            node.kind === ts.SyntaxKind.ImportClause && !!node.name ||
-            node.kind === ts.SyntaxKind.NamespaceImport ||
-            node.kind === ts.SyntaxKind.ImportSpecifier ||
-            node.kind === ts.SyntaxKind.ExportSpecifier ||
-            node.kind === ts.SyntaxKind.ExportAssignment && node.expression.kind === ts.SyntaxKind.Identifier;
-    }
-    TsCore.isAliasSymbolDeclaration = isAliasSymbolDeclaration;
-    function normalizeSlashes(path) {
-        return path.replace(/\\/g, "/");
-    }
-    TsCore.normalizeSlashes = normalizeSlashes;
-    function outputExtension(path) {
-        return path.replace(/\.ts/, ".js");
-    }
-    TsCore.outputExtension = outputExtension;
-})(TsCore || (TsCore = {}));
-var level = {
+var tsc = require("ts2js");
+exports.level = {
     none: 0,
     error: 1,
     warn: 2,
@@ -136,56 +26,58 @@ var Logger = (function () {
     Logger.log = function () {
         var args = [];
         for (var _i = 0; _i < arguments.length; _i++) {
-            args[_i - 0] = arguments[_i];
+            args[_i] = arguments[_i];
         }
         console.log.apply(console, [chalk.gray("[" + this.logName + "]")].concat(args));
     };
     Logger.info = function () {
         var args = [];
         for (var _i = 0; _i < arguments.length; _i++) {
-            args[_i - 0] = arguments[_i];
+            args[_i] = arguments[_i];
         }
-        if (this.logLevel < level.info) {
+        if (this.logLevel < exports.level.info) {
             return;
         }
-        console.log.apply(console, [chalk.gray(("[" + this.logName + "]") + chalk.blue(" INFO: "))].concat(args));
+        console.log.apply(console, [chalk.gray("[" + this.logName + "]" + chalk.blue(" INFO: "))].concat(args));
     };
     Logger.warn = function () {
         var args = [];
         for (var _i = 0; _i < arguments.length; _i++) {
-            args[_i - 0] = arguments[_i];
+            args[_i] = arguments[_i];
         }
-        if (this.logLevel < level.warn) {
+        if (this.logLevel < exports.level.warn) {
             return;
         }
-        console.log.apply(console, [("[" + this.logName + "]") + chalk.yellow(" WARNING: ")].concat(args));
+        console.log.apply(console, ["[" + this.logName + "]" + chalk.yellow(" WARNING: ")].concat(args));
     };
     Logger.error = function () {
         var args = [];
         for (var _i = 0; _i < arguments.length; _i++) {
-            args[_i - 0] = arguments[_i];
+            args[_i] = arguments[_i];
         }
-        if (this.logLevel < level.error) {
+        if (this.logLevel < exports.level.error) {
             return;
         }
-        console.log.apply(console, [("[" + this.logName + "]") + chalk.red(" ERROR: ")].concat(args));
+        console.log.apply(console, ["[" + this.logName + "]" + chalk.red(" ERROR: ")].concat(args));
     };
     Logger.trace = function () {
         var args = [];
         for (var _i = 0; _i < arguments.length; _i++) {
-            args[_i - 0] = arguments[_i];
+            args[_i] = arguments[_i];
         }
-        if (this.logLevel < level.error) {
+        if (this.logLevel < exports.level.error) {
             return;
         }
-        console.log.apply(console, [("[" + this.logName + "]") + chalk.gray(" TRACE: ")].concat(args));
+        console.log.apply(console, ["[" + this.logName + "]" + chalk.gray(" TRACE: ")].concat(args));
     };
-    Logger.logLevel = level.none;
-    Logger.logName = "logger";
     return Logger;
 }());
+Logger.logLevel = exports.level.none;
+Logger.logName = "logger";
+exports.Logger = Logger;
 var Ast;
 (function (Ast) {
+    var ContainerFlags;
     (function (ContainerFlags) {
         // The current node is not a container, and no container manipulation should happen before
         // recursing into it.
@@ -212,8 +104,7 @@ var Ast;
         //
         //      Functions, Methods, Modules, Source-files.
         ContainerFlags[ContainerFlags["IsContainerWithLocals"] = 33] = "IsContainerWithLocals";
-    })(Ast.ContainerFlags || (Ast.ContainerFlags = {}));
-    var ContainerFlags = Ast.ContainerFlags;
+    })(ContainerFlags = Ast.ContainerFlags || (Ast.ContainerFlags = {}));
     function isPrototypeAccessAssignment(expression) {
         if (expression.kind !== ts.SyntaxKind.BinaryExpression) {
             return false;
@@ -274,9 +165,9 @@ var Ast;
     function isClassInternal(symbol) {
         if (symbol && (symbol.flags & ts.SymbolFlags.Class)) {
             // A class always has a value declaration
-            var flags = symbol.valueDeclaration.flags;
+            var flags = getModifierFlags(symbol.valueDeclaration);
             // By convention, "Internal" classes are ones that are not exported.
-            if (!(flags & ts.NodeFlags.Export)) {
+            if (!(flags & ts.ModifierFlags.Export)) {
                 return true;
             }
         }
@@ -285,7 +176,7 @@ var Ast;
     Ast.isClassInternal = isClassInternal;
     function isClassAbstract(classSymbol) {
         if (classSymbol && classSymbol.valueDeclaration) {
-            if (classSymbol.valueDeclaration.flags & ts.NodeFlags.Abstract) {
+            if (getModifierFlags(classSymbol.valueDeclaration) & ts.ModifierFlags.Abstract) {
                 return true;
             }
         }
@@ -339,7 +230,7 @@ var Ast;
             var abstractType = checker.getTypeAtLocation(abstractTypeNode);
             var abstractTypeSymbol = abstractType.getSymbol();
             if (abstractTypeSymbol.valueDeclaration) {
-                if (abstractTypeSymbol.valueDeclaration.flags & ts.NodeFlags.Abstract) {
+                if (getModifierFlags(abstractTypeSymbol.valueDeclaration) & ts.ModifierFlags.Abstract) {
                     var props = abstractType.getProperties();
                     for (var _a = 0, props_1 = props; _a < props_1.length; _a++) {
                         var prop = props_1[_a];
@@ -502,7 +393,7 @@ var Ast;
     function isAmbientProperty(propertySymbol) {
         var node = propertySymbol.valueDeclaration;
         while (node) {
-            if (node.flags & ts.NodeFlags.Ambient) {
+            if (getModifierFlags(node) & ts.ModifierFlags.Ambient) {
                 return true;
             }
             node = node.parent;
@@ -510,7 +401,35 @@ var Ast;
         return false;
     }
     Ast.isAmbientProperty = isAmbientProperty;
-})(Ast || (Ast = {}));
+    function getModifierFlags(node) {
+        var flags = ts.ModifierFlags.None;
+        if (node.modifiers) {
+            for (var _i = 0, _a = node.modifiers; _i < _a.length; _i++) {
+                var modifier = _a[_i];
+                flags |= modifierToFlag(modifier.kind);
+            }
+        }
+        return flags;
+    }
+    Ast.getModifierFlags = getModifierFlags;
+    function modifierToFlag(token) {
+        switch (token) {
+            case ts.SyntaxKind.StaticKeyword: return ts.ModifierFlags.Static;
+            case ts.SyntaxKind.PublicKeyword: return ts.ModifierFlags.Public;
+            case ts.SyntaxKind.ProtectedKeyword: return ts.ModifierFlags.Protected;
+            case ts.SyntaxKind.PrivateKeyword: return ts.ModifierFlags.Private;
+            case ts.SyntaxKind.AbstractKeyword: return ts.ModifierFlags.Abstract;
+            case ts.SyntaxKind.ExportKeyword: return ts.ModifierFlags.Export;
+            case ts.SyntaxKind.DeclareKeyword: return ts.ModifierFlags.Ambient;
+            case ts.SyntaxKind.ConstKeyword: return ts.ModifierFlags.Const;
+            case ts.SyntaxKind.DefaultKeyword: return ts.ModifierFlags.Default;
+            case ts.SyntaxKind.AsyncKeyword: return ts.ModifierFlags.Async;
+            case ts.SyntaxKind.ReadonlyKeyword: return ts.ModifierFlags.Readonly;
+        }
+        return ts.ModifierFlags.None;
+    }
+    Ast.modifierToFlag = modifierToFlag;
+})(Ast = exports.Ast || (exports.Ast = {}));
 var IdentifierInfo = (function () {
     function IdentifierInfo(identifier, symbol, container) {
         this.containers = {};
@@ -603,12 +522,12 @@ var IdentifierInfo = (function () {
         if (this.symbol.flags & ts.SymbolFlags.Function) {
             // A function has a value declaration
             if (this.symbol.valueDeclaration.kind === ts.SyntaxKind.FunctionDeclaration) {
-                var flags = this.symbol.valueDeclaration.flags;
+                var flags = Ast.getModifierFlags(this.symbol.valueDeclaration);
                 // If The function is from an extern API or ambient then it cannot be considered internal.
                 if (Ast.isExportProperty(this.symbol) || Ast.isAmbientProperty(this.symbol)) {
                     return false;
                 }
-                if (!(flags & ts.NodeFlags.Export)) {
+                if (!(flags & ts.ModifierFlags.Export)) {
                     return true;
                 }
                 // Override export flag if function is not in our special package namespace.
@@ -634,8 +553,8 @@ var IdentifierInfo = (function () {
             if (this.symbol.valueDeclaration === undefined) {
                 return false;
             }
-            var flags = this.symbol.valueDeclaration.flags;
-            if ((flags & ts.NodeFlags.Private) > 0) {
+            var flags = Ast.getModifierFlags(this.symbol.valueDeclaration);
+            if ((flags & ts.ModifierFlags.Private) > 0) {
                 return true;
             }
             // Check if the method parent class or interface is "internal" ( non-private methods may be shortened too )
@@ -659,8 +578,8 @@ var IdentifierInfo = (function () {
             if (this.symbol.valueDeclaration === undefined) {
                 return false;
             }
-            var flags = this.symbol.valueDeclaration.flags;
-            if ((flags & ts.NodeFlags.Private) > 0) {
+            var flags = Ast.getModifierFlags(this.symbol.valueDeclaration);
+            if ((flags & ts.ModifierFlags.Private) > 0) {
                 return true;
             }
             // Check if the property parent class is "internal" ( non-private properties may be shortened too )
@@ -689,6 +608,7 @@ var IdentifierInfo = (function () {
     };
     return IdentifierInfo;
 }());
+exports.IdentifierInfo = IdentifierInfo;
 var Utils;
 (function (Utils) {
     function forEach(array, callback) {
@@ -758,16 +678,16 @@ var Utils;
         return str.substr(0, index) + character + str.substr(index + character.length);
     }
     Utils.replaceAt = replaceAt;
-})(Utils || (Utils = {}));
+})(Utils = exports.Utils || (exports.Utils = {}));
 var ContainerIdGenerator = (function () {
     function ContainerIdGenerator() {
     }
     ContainerIdGenerator.getNextId = function () {
         return this.nextId++;
     };
-    ContainerIdGenerator.nextId = 1;
     return ContainerIdGenerator;
 }());
+ContainerIdGenerator.nextId = 1;
 var Container = (function () {
     function Container(node, containerFlags, parentContainer) {
         this.childContainers = [];
@@ -870,6 +790,115 @@ var Container = (function () {
     };
     return Container;
 }());
+exports.Container = Container;
+var TsCore;
+(function (TsCore) {
+    function fileExtensionIs(path, extension) {
+        var pathLen = path.length;
+        var extLen = extension.length;
+        return pathLen > extLen && path.substr(pathLen - extLen, extLen) === extension;
+    }
+    TsCore.fileExtensionIs = fileExtensionIs;
+    TsCore.supportedExtensions = [".ts", ".tsx", ".d.ts"];
+    TsCore.moduleFileExtensions = TsCore.supportedExtensions;
+    function isSupportedSourceFileName(fileName) {
+        if (!fileName) {
+            return false;
+        }
+        for (var _i = 0, supportedExtensions_1 = TsCore.supportedExtensions; _i < supportedExtensions_1.length; _i++) {
+            var extension = supportedExtensions_1[_i];
+            if (fileExtensionIs(fileName, extension)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    TsCore.isSupportedSourceFileName = isSupportedSourceFileName;
+    function getSourceFileOfNode(node) {
+        while (node && node.kind !== ts.SyntaxKind.SourceFile) {
+            node = node.parent;
+        }
+        return node;
+    }
+    TsCore.getSourceFileOfNode = getSourceFileOfNode;
+    function getSourceFileFromSymbol(symbol) {
+        var declarations = symbol.getDeclarations();
+        if (declarations && declarations.length > 0) {
+            if (declarations[0].kind === ts.SyntaxKind.SourceFile) {
+                return declarations[0].getSourceFile();
+            }
+        }
+        return undefined;
+    }
+    TsCore.getSourceFileFromSymbol = getSourceFileFromSymbol;
+    function getExternalModuleName(node) {
+        if (node.kind === ts.SyntaxKind.ImportDeclaration) {
+            return node.moduleSpecifier;
+        }
+        if (node.kind === ts.SyntaxKind.ImportEqualsDeclaration) {
+            var reference = node.moduleReference;
+            if (reference.kind === ts.SyntaxKind.ExternalModuleReference) {
+                return reference.expression;
+            }
+        }
+        if (node.kind === ts.SyntaxKind.ExportDeclaration) {
+            return node.moduleSpecifier;
+        }
+        return undefined;
+    }
+    TsCore.getExternalModuleName = getExternalModuleName;
+    function createDiagnostic(message) {
+        var args = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            args[_i - 1] = arguments[_i];
+        }
+        // FUTURE: Typescript 1.8.x supports localized diagnostic messages.
+        var textUnique123 = message.message;
+        if (arguments.length > 1) {
+            textUnique123 = formatStringFromArgs(textUnique123, arguments, 1);
+        }
+        return {
+            file: undefined,
+            start: undefined,
+            length: undefined,
+            messageText: textUnique123,
+            category: message.category,
+            code: message.code
+        };
+    }
+    TsCore.createDiagnostic = createDiagnostic;
+    function formatStringFromArgs(text, args, baseIndex) {
+        baseIndex = baseIndex || 0;
+        return text.replace(/{(\d+)}/g, function (match, index) {
+            return args[+index + baseIndex];
+        });
+    }
+    // An alias symbol is created by one of the following declarations:
+    // import <symbol> = ...
+    // import <symbol> from ...
+    // import * as <symbol> from ...
+    // import { x as <symbol> } from ...
+    // export { x as <symbol> } from ...
+    // export = ...
+    // export default ...
+    function isAliasSymbolDeclaration(node) {
+        return node.kind === ts.SyntaxKind.ImportEqualsDeclaration ||
+            node.kind === ts.SyntaxKind.ImportClause && !!node.name ||
+            node.kind === ts.SyntaxKind.NamespaceImport ||
+            node.kind === ts.SyntaxKind.ImportSpecifier ||
+            node.kind === ts.SyntaxKind.ExportSpecifier ||
+            node.kind === ts.SyntaxKind.ExportAssignment && node.expression.kind === ts.SyntaxKind.Identifier;
+    }
+    TsCore.isAliasSymbolDeclaration = isAliasSymbolDeclaration;
+    function normalizeSlashes(path) {
+        return path.replace(/\\/g, "/");
+    }
+    TsCore.normalizeSlashes = normalizeSlashes;
+    function outputExtension(path) {
+        return path.replace(/\.ts/, ".js");
+    }
+    TsCore.outputExtension = outputExtension;
+})(TsCore = exports.TsCore || (exports.TsCore = {}));
 var NodeWalker = (function () {
     function NodeWalker() {
     }
@@ -885,6 +914,7 @@ var NodeWalker = (function () {
     };
     return NodeWalker;
 }());
+exports.NodeWalker = NodeWalker;
 var StatisticsReporter = (function () {
     function StatisticsReporter() {
     }
@@ -917,6 +947,7 @@ var StatisticsReporter = (function () {
     };
     return StatisticsReporter;
 }());
+exports.StatisticsReporter = StatisticsReporter;
 var NameGenerator = (function () {
     function NameGenerator() {
         // Base64 char set: 26 lowercase letters + 26 uppercase letters + '$' + '_' + 10 digits                                          
@@ -950,6 +981,7 @@ var NameGenerator = (function () {
     };
     return NameGenerator;
 }());
+exports.NameGenerator = NameGenerator;
 var Debug;
 (function (Debug) {
     function assert(condition, message) {
@@ -962,26 +994,27 @@ var Debug;
         }
     }
     Debug.assert = assert;
-})(Debug || (Debug = {}));
+})(Debug = exports.Debug || (exports.Debug = {}));
 var Minifier = (function (_super) {
     __extends(Minifier, _super);
-    function Minifier(program, compilerOptions, minifierOptions) {
-        _super.call(this);
-        this.containerStack = [];
-        this.classifiableContainers = {};
-        this.allIdentifierInfos = {};
-        this.whiteSpaceBefore = 0;
-        this.whiteSpaceAfter = 0;
-        this.whiteSpaceTime = 0;
-        this.transformTime = 0;
-        this.identifierCount = 0;
-        this.shortenedIdentifierCount = 0;
-        this.program = program;
-        this.checker = program.getTypeChecker();
-        this.compilerOptions = compilerOptions;
-        this.minifierOptions = minifierOptions;
-        this.containerStack = [];
-        this.nameGenerator = new NameGenerator();
+    function Minifier(program, minifierOptions) {
+        var _this = _super.call(this) || this;
+        _this.containerStack = [];
+        _this.classifiableContainers = {};
+        _this.allIdentifierInfos = {};
+        _this.whiteSpaceBefore = 0;
+        _this.whiteSpaceAfter = 0;
+        _this.whiteSpaceTime = 0;
+        _this.transformTime = 0;
+        _this.identifierCount = 0;
+        _this.shortenedIdentifierCount = 0;
+        _this.program = program;
+        _this.checker = program.getTypeChecker();
+        _this.compilerOptions = program.getCompilerOptions();
+        _this.minifierOptions = minifierOptions;
+        _this.containerStack = [];
+        _this.nameGenerator = new NameGenerator();
+        return _this;
     }
     Minifier.prototype.transform = function (sourceFile) {
         this.sourceFile = sourceFile;
@@ -1557,122 +1590,34 @@ var Minifier = (function (_super) {
     };
     return Minifier;
 }(NodeWalker));
-var Project = (function () {
-    function Project() {
-    }
-    Project.getProjectConfig = function (configFilePath) {
-        var configFileDir;
-        var configFileName;
-        try {
-            var isConfigDirectory = fs.lstatSync(configFilePath).isDirectory();
-        }
-        catch (e) {
-            var diagnostic = TsCore.createDiagnostic({ code: 6064, category: ts.DiagnosticCategory.Error, key: "Cannot_read_project_path_0_6064", message: "Cannot read project path '{0}'." }, configFilePath);
-            return { success: false, errors: [diagnostic] };
-        }
-        if (isConfigDirectory) {
-            configFileDir = configFilePath;
-            configFileName = path.join(configFilePath, "tsconfig.json");
-        }
-        else {
-            configFileDir = path.dirname(configFilePath);
-            configFileName = configFilePath;
-        }
-        var readConfigResult = ts.readConfigFile(configFileName, function (fileName) {
-            return ts.sys.readFile(fileName);
-        });
-        if (readConfigResult.error) {
-            return { success: false, errors: [readConfigResult.error] };
-        }
-        var configObject = readConfigResult.config;
-        // Parse standard project configuration objects: compilerOptions, files.
-        var configParseResult = ts.parseJsonConfigFileContent(configObject, ts.sys, configFileDir);
-        if (configParseResult.errors.length > 0) {
-            return { success: false, errors: configParseResult.errors };
-        }
-        return {
-            success: true,
-            compilerOptions: configParseResult.options,
-            fileNames: configParseResult.fileNames
+exports.Minifier = Minifier;
+var MinifierPlugin = (function () {
+    function MinifierPlugin(minifierOptions) {
+        var _this = this;
+        this.onPostEmit = function (emitResult) {
+            if (!emitResult.emitSkipped && _this.minifierOptions.removeWhitespace) {
+                // Whitespace removal cannot be performed in the AST minification transform, so we do it here for now
+                emitResult.codeFile.data = _this.minifier.removeWhitespace(emitResult.codeFile.data);
+            }
         };
-    };
-    return Project;
-}());
-var MinifyingCompiler = (function (_super) {
-    __extends(MinifyingCompiler, _super);
-    function MinifyingCompiler(compilerOptions, minifierOptions, host) {
-        _super.call(this, compilerOptions, host);
         this.minifierOptions = minifierOptions;
     }
-    MinifyingCompiler.prototype.emit = function () {
-        var output = [];
-        var codeFile;
-        var mapFile;
-        var dtsFile;
-        // Modify compiler options for the minifiers purposes
-        var options = this.options;
-        options.noEmit = undefined;
-        options.declaration = undefined;
-        options.declarationDir = undefined;
-        options.out = undefined;
-        options.outFile = undefined;
-        var allDiagnostics = ts.getPreEmitDiagnostics(this.program);
-        if (this.options.noEmitOnError && (preEmitDiagnostics.length > 0)) {
-            return {
-                diagnostics: allDiagnostics,
-                emitSkipped: true
-            };
+    MinifierPlugin.prototype.transform = function (context) {
+        var self = this;
+        this.program = context.getProgram();
+        this.minifier = new Minifier(this.program, this.minifierOptions);
+        context.onPostEmit = this.onPostEmit;
+        function transformImpl(sourceFile) {
+            if (self.minifierOptions.mangleIdentifiers) {
+                sourceFile = self.minifier.transform(sourceFile);
+            }
+            return sourceFile;
         }
-        var fileNames = this.program.getRootFileNames();
-        var minifier = new Minifier(this.program, this.options, this.minifierOptions);
-        for (var fileNameIndex in fileNames) {
-            var sourceFile = this.program.getSourceFile(fileNames[fileNameIndex]);
-            var preEmitDiagnostics = ts.getPreEmitDiagnostics(this.program, sourceFile);
-            // We don't emit on errors - what's the point!?!
-            if (preEmitDiagnostics.length > 0) {
-                output.push({
-                    fileName: fileNames[fileNameIndex],
-                    emitSkipped: true,
-                    diagnostics: preEmitDiagnostics });
-                continue;
-            }
-            if (this.minifierOptions.mangleIdentifiers) {
-                sourceFile = minifier.transform(sourceFile);
-            }
-            var emitResult = this.program.emit(sourceFile, function (fileName, data, writeByteOrderMark) {
-                var file = { fileName: fileName, data: data, writeByteOrderMark: writeByteOrderMark };
-                if (TsCore.fileExtensionIs(fileName, ".js") || TsCore.fileExtensionIs(fileName, ".jsx")) {
-                    codeFile = file;
-                }
-                else if (TsCore.fileExtensionIs(fileName, "d.ts")) {
-                    dtsFile = file;
-                }
-                else if (TsCore.fileExtensionIs(fileName, ".map")) {
-                    mapFile = file;
-                }
-            });
-            if (!emitResult.emitSkipped && this.minifierOptions.removeWhitespace) {
-                // Whitespace removal cannot be performed in the AST minification transform, so we do it here for now
-                codeFile.data = minifier.removeWhitespace(codeFile.data);
-            }
-            var minifyOutput = {
-                fileName: fileNames[fileNameIndex],
-                emitSkipped: emitResult.emitSkipped,
-                codeFile: codeFile,
-                mapFile: mapFile,
-                dtsFile: dtsFile,
-                diagnostics: emitResult.diagnostics
-            };
-            output.push(minifyOutput);
-        }
-        return {
-            emitSkipped: false,
-            emitOutput: output,
-            diagnostics: allDiagnostics
-        };
+        return transformImpl;
     };
-    return MinifyingCompiler;
-}(tscompiler.Compiler));
+    return MinifierPlugin;
+}());
+exports.MinifierPlugin = MinifierPlugin;
 function format(input) {
     var settings = getDefaultFormatCodeSettings();
     var sourceFile = ts.createSourceFile("file.js", input, ts.ScriptTarget.Latest);
@@ -1714,24 +1659,26 @@ function format(input) {
         };
     }
 }
-// Exported types
+exports.format = format;
 ;
 var TsMinifier;
 (function (TsMinifier) {
     //export var Minifier: Minifier = Minifier;
     exports.TsMinifier.Minifier = Minifier;
     function minify(fileNames, compilerOptions, minifierOptions) {
-        var compiler = new MinifyingCompiler(compilerOptions, minifierOptions);
+        var minifierPlugin = new MinifierPlugin(minifierOptions);
+        var compiler = new tsc.Compiler(compilerOptions, minifierPlugin);
         return compiler.compile(fileNames);
     }
     TsMinifier.minify = minify;
     function minifyModule(input, moduleFileName, compilerOptions, minifierOptions) {
-        var compiler = new MinifyingCompiler(compilerOptions, minifierOptions);
+        var minifierPlugin = new MinifierPlugin(minifierOptions);
+        var compiler = new tsc.Compiler(compilerOptions, minifierPlugin);
         return compiler.compileModule(input, moduleFileName);
     }
     TsMinifier.minifyModule = minifyModule;
     function minifyProject(configFilePath, minifierOptions) {
-        var config = Project.getProjectConfig(configFilePath);
+        var config = tsc.ProjectHelper.getProjectConfig(configFilePath);
         return minify(config.fileNames, config.compilerOptions, minifierOptions);
     }
     TsMinifier.minifyProject = minifyProject;
@@ -1739,13 +1686,6 @@ var TsMinifier;
         return format(input);
     }
     TsMinifier.prettify = prettify;
-    var ProjectHelper;
-    (function (ProjectHelper) {
-        function getProjectConfig(configFilePath) {
-            return Project.getProjectConfig(configFilePath);
-        }
-        ProjectHelper.getProjectConfig = getProjectConfig;
-    })(ProjectHelper = TsMinifier.ProjectHelper || (TsMinifier.ProjectHelper = {}));
 })(TsMinifier = exports.TsMinifier || (exports.TsMinifier = {}));
 // TJT: Comment out when testing locally.
 module.exports = TsMinifier;
