@@ -1,0 +1,9 @@
+{
+  "name": "ts-minifier",
+  "version": "0.0.0",
+  "description": "TsMinifier",
+  "main": "app.js",
+  "author": {
+    "name": "Administrator"
+  }
+}
