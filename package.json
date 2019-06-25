@@ -1,9 +1,48 @@
 {
-  "name": "ts-minifier",
-  "version": "0.0.0",
-  "description": "TsMinifier",
-  "main": "app.js",
-  "author": {
-    "name": "Administrator"
+  "name": "tsminifier",
+  "version": "3.0.0-beta.1",
+  "author": "Todd Thomson <todd.thomson@me.com>",
+  "description": "Typescript minifier providing identifier mangling and whitespace removal.",
+  "license": "MIT",
+  "main": "./lib/tsminifier.js",
+  "types": "./lib/tsminifier.d.ts",
+  "typings": "./lib/tsminifier.d.ts",
+  "engines": {
+    "node": ">= 8"
+  },
+  "dependencies": {
+    "@types/node": "10.14.9",
+    "chalk": "^2.4.2",
+    "ts2js": "3.0.0-beta.4",
+    "typescript": "~3.5.2"
+  },
+  "devDependencies": {
+    "chalk": "^2.4.2",
+    "del": "^4.1.1",
+    "gulp": "^4.0.2",
+    "gulp-hub": "^4.2.0",
+    "tsproject": "^2.1.2",
+    "typescript": "~3.5.2",
+    "vinyl-paths": "^3.0.0"
+  },
+  "keywords": [
+    "minifier",
+    "minify",
+    "minification",
+    "transform",
+    "plugin",
+    "compile",
+    "compiler",
+    "typescript",
+    "typescript minifier"
+  ],
+  "homepage": "https://github.com/toddthomson/tsminifier",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/toddthomson/tsminifier.git"
+  },
+  "bugs": "https://github.com/toddthomson/tsminifier/issues",
+  "scripts": {
+    "build": "gulp build"
   }
 }
