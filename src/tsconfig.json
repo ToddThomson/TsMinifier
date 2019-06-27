@@ -1,4 +1,6 @@
 {
+  "compileOnSave": true,
+
   "compilerOptions": {
     "target": "es5",
     "module": "commonjs",
@@ -9,37 +11,25 @@
     "listFiles": false,
     "pretty": true,
     "skipLibCheck": true,
-    "noEmitOnError": false,
+    "noEmitOnError": true,
     "noImplicitAny": true,
     "preserveConstEnums": true,
     "removeComments": false,
-    "noEmit": false
+    "noEmit": false,
+    "baseUrl": ".",
+    "paths": {
+      "@TsToolsCommon/*": [ "../../TsToolsCommon/src/*" ]
+    }
   },
-  "compileOnSave": true,
-  "files": [
-    "./Ast/Ast.ts",
-    "./Ast/AstTransform.ts",
-    "./Ast/NodeWalker.ts",
 
-    "./Minifier/Minifier.ts",
-    "./Minifier/MinifierOptions.ts",
-    "./Minifier/MinifierResult.ts",
-    "./Minifier/MinifierStatistics.ts",
-    "./Minifier/ContainerContext.ts",
-    "./Minifier/IdentifierSymbolInfo.ts",
-    "./Minifier/NameGenerator.ts",
-
-    "./Reporting/DiagnosticsReporter.ts",
-    "./Reporting/Logger.ts",
-    "./Reporting/StatisticsReporter.ts",
-
-    "./Utils/Debug.ts",
-    "./Utils/Formatter.ts",
-    "./Utils/TsCore.ts",
-    "./Utils/Utilities.ts",
-
-    "./TsMinifier.ts"
+  "include": [
+    "./**/*.ts"
   ],
+
+  "exclude": [
+    "../node_modules"
+  ],
+
   "bundles": {
     "tsminifier": {
       "files": [ "./TsMinifier.ts" ],

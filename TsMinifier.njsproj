@@ -58,23 +58,13 @@
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="tests\run.ts" />
-    <TypeScriptCompile Include="src\Ast\Ast.ts" />
-    <TypeScriptCompile Include="src\Ast\AstTransform.ts" />
-    <TypeScriptCompile Include="src\Ast\NodeWalker.ts" />
     <TypeScriptCompile Include="src\Minifier\ContainerContext.ts" />
-    <TypeScriptCompile Include="src\Minifier\IdentifierSymbolInfo.ts" />
+    <TypeScriptCompile Include="src\Minifier\IdentifierInfo.ts" />
     <TypeScriptCompile Include="src\Minifier\Minifier.ts" />
     <TypeScriptCompile Include="src\Minifier\MinifierOptions.ts" />
     <TypeScriptCompile Include="src\Minifier\MinifierStatistics.ts" />
     <TypeScriptCompile Include="src\Minifier\NameGenerator.ts" />
-    <TypeScriptCompile Include="src\Reporting\DiagnosticsReporter.ts" />
-    <TypeScriptCompile Include="src\Reporting\Logger.ts" />
-    <TypeScriptCompile Include="src\Reporting\StatisticsReporter.ts" />
     <TypeScriptCompile Include="src\TsMinifier.ts" />
-    <TypeScriptCompile Include="src\Utils\Debug.ts" />
-    <TypeScriptCompile Include="src\Utils\Formatter.ts" />
-    <TypeScriptCompile Include="src\Utils\TsCore.ts" />
-    <TypeScriptCompile Include="src\Utils\Utilities.ts" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="build\" />
@@ -82,10 +72,7 @@
     <Folder Include="lib\" />
     <Folder Include="tests\" />
     <Folder Include="src\" />
-    <Folder Include="src\Ast\" />
     <Folder Include="src\Minifier\" />
-    <Folder Include="src\Reporting\" />
-    <Folder Include="src\Utils\" />
   </ItemGroup>
   <Import Project="$(VSToolsPath)\Node.js Tools\Microsoft.NodejsToolsV2.targets" />
   <ProjectExtensions>

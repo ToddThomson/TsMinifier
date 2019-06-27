@@ -1,8 +1,8 @@
 ﻿import * as ts from "typescript";
-import { Ast } from "../Ast/Ast";
-import { IdentifierInfo } from "./IdentifierSymbolInfo";
-import { Logger } from "../Reporting/Logger";
-import { Utils } from "../Utils/Utilities";
+import { IdentifierInfo } from "./IdentifierInfo";
+import { Ast } from "@TsToolsCommon/Ast/Ast";
+import { Logger } from "@TsToolsCommon/Reporting/Logger";
+import { Utils } from "@TsToolsCommon/Utils/Utilities";
 
 class ContainerIdGenerator {
     static nextId = 1;
@@ -15,7 +15,13 @@ class ContainerIdGenerator {
 export class Container {
 
     private id: number;
+
     private container: ts.Node;
+    private parentContainer: Container;
+    public nextContainer: Container;
+
+    private locals: ts.SymbolTable;
+
     private blockScopeContainer: ts.Node;
     private containerFlags: Ast.ContainerFlags;
 
@@ -27,7 +33,7 @@ export class Container {
     // The base class cannot be determined by the checker if the base class name has been shortened
     // so we use get and set for the baseClass property
     private baseClass: ts.Symbol = undefined;
-    
+
     private nameIndex: number;
     public namesExcluded: ts.MapLike<boolean> = {};
 
@@ -39,18 +45,19 @@ export class Container {
 
     public shortenedIdentifierCount = 0;
 
-    constructor( node: ts.Node, containerFlags: Ast.ContainerFlags, parentContainer: Container ) {
+    constructor( node: ts.Node ) {
         this.id = ContainerIdGenerator.getNextId();
-        this.containerFlags = containerFlags;
+        this.containerFlags = Ast.getContainerFlags( node );
 
-        if ( containerFlags & Ast.ContainerFlags.IsBlockScopedContainer ) {
+        if ( this.containerFlags & Ast.ContainerFlags.IsBlockScopedContainer ) {
             this.blockScopeContainer = node;
             this.isBlockScope = true;
 
             // A block scoped container's parent is the parent function scope container.
-            this.parent = parentContainer.getParent();
+            // this.parent = parentContainer.getParent();
         }
         else {
+            // Function scoped container...
             this.container = this.blockScopeContainer = node;
             this.isBlockScope = false;
 
@@ -96,13 +103,13 @@ export class Container {
         if ( this.container ) {
             switch ( this.container.kind ) {
                 case ts.SyntaxKind.ClassDeclaration:
-                    return (<ts.ClassDeclaration>this.container).members;
+                    return ( <ts.ClassDeclaration>this.container ).members;
 
                 case ts.SyntaxKind.EnumDeclaration:
-                    return (<ts.EnumDeclaration>this.container).members;
+                    return ( <ts.EnumDeclaration>this.container ).members;
 
                 default:
-                    Logger.trace( "Container::getMembers() unprocessed container kind: ", this.container.kind );
+                    Logger.trace( "Container::getMembers() unprocessed container kind: ", this.container.kind, this.getId() );
             }
         }
 
@@ -110,12 +117,12 @@ export class Container {
     }
 
     public getLocals(): ts.SymbolTable {
-         if ( this.container && this.containerFlags & Ast.ContainerFlags.HasLocals ) {
+        if ( this.container && this.containerFlags & Ast.ContainerFlags.HasLocals ) {
             switch ( this.container.kind ) {
                 case ts.SyntaxKind.ModuleDeclaration:
-                    return (<any>this.container).locals;
+                    return ( <any>this.container ).locals;
                 default:
-                    Logger.warn( "Container::getLocals() unprocessed container kind: ", this.container.kind );
+                    Logger.warn( "Container::getLocals() unprocessed container kind: ", this.container.kind, this.getId() );
             }
         }
 
@@ -146,7 +153,7 @@ export class Container {
 
     public hasChild( container: Container ): boolean {
         for ( let i = 0; i < this.childContainers.length; i++ ) {
-            if ( container.getId() === this.childContainers[ i ].getId() )
+            if ( container.getId() === this.childContainers[i].getId() )
                 return true;
         }
 

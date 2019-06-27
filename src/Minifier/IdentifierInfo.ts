@@ -1,20 +1,19 @@
 ﻿import * as ts from "typescript";
 import { Container } from "./ContainerContext";
-import { Ast } from "../Ast/Ast";
 import { MinifierOptions } from "./MinifierOptions";
-import { Utils } from "../Utils/Utilities";
-import { TsCore } from "../Utils/TsCore";
-import { Logger } from "../Reporting/Logger";
+import { Ast } from "@TsToolsCommon/Ast/Ast";
+import { Utils } from "@TsToolsCommon/Utils/Utilities";
+import { TsCore } from "@TsToolsCommon/Utils/TsCore";
+import { Logger } from "@TsToolsCommon/Reporting/Logger";
 
 export class IdentifierInfo {
-
     private identifier: ts.Identifier;
     private symbol: ts.Symbol;
-
     private containers: ts.MapLike<Container> = {};
     private identifiers: ts.Identifier[] = [];
 
     public shortenedName: string = undefined;
+    public isMinified: boolean = false;
 
     constructor( identifier: ts.Identifier, symbol: ts.Symbol, container: Container ) {
         this.identifier = identifier;
@@ -141,10 +140,10 @@ export class IdentifierInfo {
 
             // A function has a value declaration
             if ( this.symbol.valueDeclaration.kind === ts.SyntaxKind.FunctionDeclaration ) {
-                let flags = Ast.getModifierFlags( this.symbol.valueDeclaration );
+                let flags = Ast.getModifierFlagsNoCache( this.symbol.valueDeclaration );
 
                 // If The function is from an extern API or ambient then it cannot be considered internal.
-                if ( Ast.isExportProperty( this.symbol ) || Ast.isAmbientProperty( this.symbol ) ) {
+                if ( Ast.isExportContext( this.symbol ) || Ast.isAmbientContext( this.symbol ) ) {
                     return false;
                 }
 
@@ -180,7 +179,7 @@ export class IdentifierInfo {
                 return false;
             }
 
-            let flags = Ast.getModifierFlags( this.symbol.valueDeclaration );
+            let flags = Ast.getModifierFlagsNoCache( this.symbol.valueDeclaration );
 
             if ( ( flags & ts.ModifierFlags.Private ) > 0 ) {
                 return true;
@@ -214,7 +213,7 @@ export class IdentifierInfo {
                 return false;
             }
 
-            let flags = Ast.getModifierFlags( this.symbol.valueDeclaration );
+            let flags = Ast.getModifierFlagsNoCache( this.symbol.valueDeclaration );
 
             if ( ( flags & ts.ModifierFlags.Private ) > 0 ) {
                 return true;

@@ -9,6 +9,7 @@ tests/*
 src/**/*.js
 src/**/*.js.map
 src/**/*.d.ts
+TsToolsCommon/*
 *.dat
 *.njsproj.user
 *.njsproj.vspscc

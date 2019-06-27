@@ -18,7 +18,7 @@ export class MinifierTransform {
         this.program = program;
         this.host = host;
 
-        this.minifier = new Minifier( this.program, this.options );
+        this.minifier = new Minifier( this.program, this.compilerOptions, this.options );
 
         function transformImpl( sourceFile: ts.SourceFile ) {
             if ( this.options.mangleIdentifiers ) {

@@ -19,10 +19,15 @@
       "node"
     ]
   },
+
+  "include": [
+    "./**/*.ts"
+  ],
+
   "exclude": [
-    "node_modules",
-    "dist",
-    "src"
+    "../node_modules",
+    "../dist",
+    "../src"
   ],
   "compileOnSave": true
 }

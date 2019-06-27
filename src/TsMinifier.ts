@@ -4,7 +4,7 @@ import { Minifier } from "./Minifier/Minifier";
 import { MinifierOptions } from "./Minifier/MinifierOptions";
 import { MinifierResult } from "./Minifier/MinifierResult";
 import { MinifierTransform } from "./Minifier/MinifierTransform";
-import { format } from "./Utils/formatter";
+import { format } from "@TsToolsCommon/Utils/formatter";
 
 // TsMinifier API..
 export { MinifierOptions };
