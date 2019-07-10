@@ -6,28 +6,26 @@ export class MinifierTransform {
     private options: MinifierOptions;
     private compilerOptions: ts.CompilerOptions;
     private program: ts.Program;
-    private host: ts.CompilerHost;
     private minifier: Minifier;
 
-    constructor( options: MinifierOptions ) {
-        this.options = options;
+    constructor( options?: MinifierOptions ) {
+        this.options = options || { mangleIdentifiers: true, removeWhitespace: true };
     }
 
-    public transform( host: ts.CompilerHost, program: ts.Program, context: ts.TransformationContext ) {
+    public transform( program: ts.Program, context: ts.TransformationContext ) {
         this.compilerOptions = context.getCompilerOptions();
         this.program = program;
-        this.host = host;
 
+        return this.transformSourceFile;
+    }
+
+    private transformSourceFile = ( sourceFile: ts.SourceFile ) => {
         this.minifier = new Minifier( this.program, this.compilerOptions, this.options );
 
-        function transformImpl( sourceFile: ts.SourceFile ) {
-            if ( this.options.mangleIdentifiers ) {
-                sourceFile = this.minifier.transform( sourceFile );
-            }
-
-            return sourceFile;
+        if ( this.options.mangleIdentifiers ) {
+            sourceFile = this.minifier.transform( sourceFile );
         }
 
-        return transformImpl;
+        return sourceFile;
     }
 }

@@ -4,11 +4,11 @@ var sourceRoot = 'src/';
 var buildRoot = 'built/';
 var releaseRoot = 'lib/';
 var bundleRoot = 'bundle/'
-var testRoot = 'tests/'
+var testRoot = './tests/spec/'
 
 module.exports = {
     root: sourceRoot,
-    test: testRoot,
+    tests: testRoot + '**/*.js',
     sourceTsConfig: sourceRoot + 'tsconfig.json',
     source: sourceRoot + '**/*.ts',
     output: buildRoot,

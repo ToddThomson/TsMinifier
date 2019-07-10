@@ -1,24 +1,30 @@
 ﻿import * as ts from "typescript";
 import * as tsc from "ts2js";
+import { TsCore } from "../../TsToolsCommon/src/Utils/TsCore"
 import { Minifier } from "./Minifier/Minifier";
 import { MinifierOptions } from "./Minifier/MinifierOptions";
 import { MinifierResult } from "./Minifier/MinifierResult";
+import { WhitespaceMinifier } from "./Minifier/WhitespaceTransform";
 import { MinifierTransform } from "./Minifier/MinifierTransform";
-import { format } from "@TsToolsCommon/Utils/formatter";
+import { format } from "../../TsToolsCommon/src/Utils/formatter";
 
 // TsMinifier API..
 export { MinifierOptions };
 export { MinifierResult };
 
-export function getMinifierTransform( host: ts.CompilerHost, program: ts.Program, options: MinifierOptions ): ts.TransformerFactory<ts.SourceFile> {
-    const minifierTransform = new MinifierTransform( options );
-    return ( context: ts.TransformationContext ) => minifierTransform.transform( host, program, context );
-}
-
 export namespace TsMinifier {
-    exports.TsMinifier.Minifier = Minifier;
 
-    export function minify( fileNames: string[], compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions  ): MinifierResult {
+    export function getMinifierTransform( program: ts.Program, options?: MinifierOptions ): ts.TransformerFactory<ts.SourceFile> {
+        const minifierTransform = new MinifierTransform( options );
+        return ( context: ts.TransformationContext ) => minifierTransform.transform( program, context );
+    }
+
+    export function getWhitespaceTransform( program: ts.Program, options?: MinifierOptions ): ts.TransformerFactory<ts.SourceFile> {
+        const whitespaceTransform = new WhitespaceMinifier();
+        return ( context: ts.TransformationContext ) => whitespaceTransform.transform( program, context );
+    }
+
+    export function minify( fileNames: string[], compilerOptions: ts.CompilerOptions, minifierOptions?: MinifierOptions  ): MinifierResult {
         const minifierPlugin = new MinifierTransform( minifierOptions );
         const compiler = new tsc.Compiler( compilerOptions );
 
@@ -30,7 +36,7 @@ export namespace TsMinifier {
         }
     }
 
-    export function minifyModule( input: string, moduleFileName: string, compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions  ): MinifierResult {
+    export function minifyModule( input: string, moduleFileName: string, compilerOptions: ts.CompilerOptions, minifierOptions?: MinifierOptions  ): MinifierResult {
         const minifierPlugin = new MinifierTransform( minifierOptions );
         const compiler = new tsc.Compiler( compilerOptions ); //, minifierPlugin );
 
@@ -42,10 +48,17 @@ export namespace TsMinifier {
         }
     }
 
-    export function minifyProject( configFilePath: string, minifierOptions: MinifierOptions ): MinifierResult {
-        const config = tsc.TsCompiler.ProjectHelper.getProjectConfig( configFilePath );
+    export function minifyProject( configFilePath: string, minifierOptions?: MinifierOptions ): MinifierResult {
+        const config = TsCore.getProjectConfig( configFilePath );
 
-        return minify( config.fileNames, config.compilerOptions, minifierOptions )
+        if ( config.errors.length > 0 ) {
+            return {
+                emitSkipped: true,
+                diagnostics: config.errors
+            }
+        }
+
+        return minify( config.fileNames, config.options, minifierOptions )
     }
 
     export function prettify( input: string ): string {

@@ -2,28 +2,27 @@
 import { NameGenerator } from "./NameGenerator";
 import { Container } from "./ContainerContext";
 import { IdentifierInfo } from "./IdentifierInfo";
+import { IdentifierCollection } from "./IdentifierInfoCollection";
 import { MinifierOptions } from "./MinifierOptions";
 import { MinifierStatistics } from "./MinifierStatistics";
-import { Ast } from "@TsToolsCommon/Ast/Ast";
-import { StatisticsReporter } from "@TsToolsCommon/Reporting/StatisticsReporter";
-import { Logger } from "@TsToolsCommon/Reporting/Logger";
-import { Debug } from "@TsToolsCommon/Utils/Debug";
-import { Utils } from "@TsToolsCommon/Utils/Utilities";
-import { TsCore } from "@TsToolsCommon/Utils/TsCore";
+import { Ast } from "../../../TsToolsCommon/src/Ast/Ast";
+import { StatisticsReporter } from "../../../TsToolsCommon/src/Reporting/StatisticsReporter";
+import { Logger } from "../../../TsToolsCommon/src/Reporting/Logger";
+import { Debug } from "../../../TsToolsCommon/src/Utils/Debug";
+import { Utils } from "../../../TsToolsCommon/src/Utils/Utilities";
+import { TsCore } from "../../../TsToolsCommon/src/Utils/TsCore";
 
 export class Minifier {
-    private bundleSourceFile: ts.SourceFile;
+    private sourceFile: ts.SourceFile;
     private checker: ts.TypeChecker;
     private compilerOptions: ts.CompilerOptions;
     private minifierOptions: MinifierOptions;
 
     private lastContainer: Container;
-    private containerStack: Container[] = [];
     private classifiableContainers: ts.MapLike<Container> = {};
-    private allIdentifierInfos: ts.MapLike<IdentifierInfo> = {};
     private sourceFileContainer: Container;
     private nameGenerator: NameGenerator;
-
+    private identifiers: IdentifierCollection;
     private identifierCount = 0;
     private shortenedIdentifierCount = 0;
 
@@ -34,179 +33,99 @@ export class Minifier {
         this.compilerOptions = compilerOptions;
         this.minifierOptions = minifierOptions;
 
-        this.containerStack = [];
         this.nameGenerator = new NameGenerator();
+        this.identifiers = new IdentifierCollection();
     }
 
-    public transform( bundleSourceFile: ts.SourceFile ): ts.SourceFile {
+    public transform( sourceFile: ts.SourceFile ): ts.SourceFile {
+        Logger.setLevel( 4 ); 
+        this.sourceFile = sourceFile;
 
-        return this.bundleSourceFile = bundleSourceFile;
-
-        //return this.minify( bundleSourceFile );
+        return this.minify( sourceFile );
     }
 
-    private addToContainerChain( nextContainer: Container ) {
+    private addToContainerChain( container: Container ) {
+        if ( !this.sourceFileContainer ) {
+            this.sourceFileContainer = container;
+        }
+        
         if ( this.lastContainer ) {
-            this.lastContainer.nextContainer = nextContainer;
+            this.lastContainer.nextContainer = container;
         }
 
-        this.lastContainer = nextContainer;
+        this.lastContainer = container;
     }
 
-    public walkContainerChain( head: Ast.ContainerNode ) {
-        var currentContainerNode = head;
+    private buildContainerChain( sourceFileNode: Ast.ContainerNode ) {
+        var currentContainerNode = sourceFileNode;
 
         while ( currentContainerNode ) {
-            var container = new Container( currentContainerNode );
+            var container = new Container( currentContainerNode, this.checker );
 
             this.addToContainerChain( container );
 
-            // Get the next container node (if any)
+            container.addIdentifiers( this.identifiers );
+
             currentContainerNode = currentContainerNode.nextContainer;
         }
     }
 
-    //protected visitNode( node: ts.Node ): void {
-    //    // Traverse nodes to build containers and process all identifiers nodes.
-    //    if ( this.isNextContainer( node ) ) {
-    //        super.visitNode( node );
+    private replaceIdentifiersNamedOldNameWithNewName2( context: ts.TransformationContext ) {
+        const visitor: ts.Visitor = ( node: ts.Node ) => {
+            if ( TsCore.isIdentifier( node ) ) {
+                
+                return ts.createIdentifier( "newName" );
+            }
+            return ts.visitEachChild( node, visitor, context );
+        };
 
-    //        //this.restoreContainer();
-    //    }
-    //    else {
-    //        switch ( node.kind ) {
-    //            case ts.SyntaxKind.Identifier:
-    //                Logger.info( "Identifier node walked in container id: ", this.currentContainer().getId() );
+        return ( node: ts.SourceFile ) => ts.visitNode( node, visitor );
+    }
 
-    //                let identifier: ts.Identifier = <ts.Identifier>node;
-    //                let identifierSymbol: ts.Symbol = this.checker.getSymbolAtLocation( identifier );
+    private getIdentifiers( sourceFile: ts.SourceFile ): ts.Identifier[] {
+        var identifierNodes: ts.Identifier[] = [];
 
-    //                // The identifierSymbol may be null when an identifier is accessed within a function that
-    //                // has been assigned to the prototype property of an object. We check for this here.
-    //                if ( !identifierSymbol ) {
-    //                    identifierSymbol = this.getSymbolFromPrototypeFunction( identifier );    
-    //                }
+        function visitSourceFileNodes( node: ts.Node ): any {
+            if ( node.kind === ts.SyntaxKind.Identifier ) {
+                identifierNodes.push( node as ts.Identifier );
+            }
 
-    //                if ( identifierSymbol ) {
-    //                    let identifierUID = Ast.getIdentifierUID( identifierSymbol );
+            return ts.forEachChild( node, visitSourceFileNodes );
+        }
 
-    //                    if ( identifierUID === undefined ) {
-    //                        if ( identifierSymbol.flags & ts.SymbolFlags.Transient ) {
-    //                            // TJT: Can we ignore all transient symbols?
-    //                            Logger.trace( "Ignoring transient symbol: ", identifierSymbol.name );
-    //                            break;
-    //                        }
-    //                        else {
-    //                            identifierUID = ( <any>ts).getSymbolId( identifierSymbol ).toString();
-    //                            Logger.trace( "Generated symbol id for: ", identifierSymbol.name, identifierUID );
-    //                        }
-    //                    }
+        visitSourceFileNodes( sourceFile );
 
-    //                    // Check to see if we've seen this identifer symbol before
-    //                    if ( Utils.hasProperty( this.allIdentifierInfos, identifierUID ) ) {
-    //                        Logger.info( "Identifier already added: ", identifierSymbol.name, identifierUID );
-
-
-    //                        // If we have, then add it to the identifier info references 
-    //                        let prevAddedIdentifier = this.allIdentifierInfos[identifierUID];
-
-    //                        if ( prevAddedIdentifier.getName() === 'getClassHeritageProperties' ) {
-    //                            var breakme4 = 1;
-
-    //                            var s = prevAddedIdentifier.getSymbol();
-    //                            var mems = s.members;
-    //                            var decl = s.valueDeclaration;
-    //                            var cont = ( <any>s.valueDeclaration ).nextContainer;
-    //                        }
-
-
-
-    //                        this.allIdentifierInfos[ identifierUID ].addRef( identifier, this.currentContainer() );
-
-    //                        // If the previously added identifier is not in the current container's local identifier table then
-    //                        // it must be excluded so that it's shortened name will not be used in this container.
-    //                        if ( !Utils.hasProperty( this.currentContainer().localIdentifiers, identifierUID ) ) {
-    //                            this.currentContainer().excludedIdentifiers[ identifierUID ] = prevAddedIdentifier; 
-    //                        }
-    //                    }
-    //                    else {
-    //                        let identifierInfo = new IdentifierInfo( identifier, identifierSymbol, this.currentContainer() );
-
-    //                        if ( identifierInfo.getName() === 'getClassHeritageProperties' ) {
-    //                            var breakme4 = 1;
-    //                        }
-    //                        if ( identifierInfo.getName() === 'classNodeU' ) {
-    //                            var breakme4 = 1;
-    //                        }
-    //                        if ( identifierInfo.getName() === 'classExportProperties' ) {
-    //                            var breakme4 = 1;
-    //                        }
-    //                        if ( identifierInfo.getName() === 'getHeritageExportProperties' ) {
-    //                            var breakme4 = 1;
-    //                        }
-    //                        Logger.info( "Adding new identifier: ", identifierInfo.getName(), identifierInfo.getId() );
-
-    //                        // Add the new identifier info to both the container and the all list
-    //                        this.currentContainer().localIdentifiers[ identifierUID ] = identifierInfo;
-    //                        this.allIdentifierInfos[ identifierUID ] = identifierInfo;
-
-    //                        // We can't shorten identifier names that are 1 character in length AND
-    //                        // we can't risk the chance that an identifier name will be replaced with a 2 char
-    //                        // shortened name due to the constraint that the names are changed in place
-    //                        let identifierName = identifierSymbol.getName();
-
-    //                        if ( identifierName.length === 1 ) {
-    //                            identifierInfo.shortenedName = identifierName;
-    //                            this.currentContainer().excludedIdentifiers[ identifierUID ] = identifierInfo;
-    //                        }
-
-    //                        this.identifierCount++;
-    //                    }
-    //                }
-    //                else {
-    //                    Logger.warn( "Identifier does not have a symbol: ", identifier.text );
-    //                }
-
-    //                break;
-    //        }
-
-    //        super.visitNode( node );
-    //    }
-    //}
-
-    //private getSymbolFromPrototypeFunction( identifier: ts.Identifier ): ts.Symbol {
-
-    //    let containerNode = this.currentContainer().getNode();
-
-    //    if ( containerNode.kind === ts.SyntaxKind.FunctionExpression ) {
-    //        if ( Ast.isPrototypeAccessAssignment( containerNode.parent ) ) {
-    //            // Get the 'x' of 'x.prototype.y = f' (here, 'f' is 'container')
-    //            const className = (((containerNode.parent as ts.BinaryExpression)   // x.prototype.y = f
-    //                .left as ts.PropertyAccessExpression)       // x.prototype.y
-    //                .expression as ts.PropertyAccessExpression) // x.prototype
-    //                .expression;                                // x
-
-    //            const classSymbol = this.checker.getSymbolAtLocation( className );
-
-    //            if ( classSymbol && classSymbol.members ) {
-    //                if ( classSymbol.members.has( identifier.escapedText ) ) {
-    //                    Logger.info( "Symbol obtained from prototype function: ", identifier.text );
-    //                    return classSymbol.members.get( identifier.escapedText );
-    //                }
-    //            }
-
-    //            return undefined;
-    //        }                            
-    //    }
-
-    //    return undefined;        
-    //}
+        return identifierNodes;
+    }
 
     private minify( sourceFile: ts.SourceFile ): ts.SourceFile {
         this.transformTime = new Date().getTime();
 
+        let identifierNodes = this.getIdentifiers( sourceFile );
+
+        for ( let identifierNode of identifierNodes ) {
+            let symbol = this.checker.getSymbolAtLocation( identifierNode );
+            let symbolId = Ast.getIdentifierUID( symbol );
+
+            if ( !this.identifiers.contains( symbolId ) ) {
+                let identifier = new IdentifierInfo( identifierNode, symbol );
+
+                Logger.info( "Adding new identifier: ", identifier.getName(), identifier.getId() );
+
+                // Add the new identifier info to both the container and the all list
+                this.identifiers.add( symbolId, identifier );
+
+            }
+            else {
+                let identifier = this.identifiers.getIdentifier( symbolId );
+
+                Logger.info( "Adding identifier node reference: ", identifier.getName(), identifier.getId() );
+                identifier.addNodeReference( identifierNode )
+            }
+        }
+
         // Walk the sourceFile to build containers and the identifiers within. 
-        //this.walk( sourceFile );
+        this.buildContainerChain( sourceFile );
 
         this.shortenIdentifiers();
 
@@ -258,8 +177,13 @@ export class Minifier {
             classContainer.excludedProperties = excludedProperties;
         }
 
-        // Recursively process the container identifiers starting at the source file container...
-        this.shortenContainerIdentifiers( this.sourceFileContainer );
+        // Walk through the container identifiers starting at the source file container...
+        let container = this.sourceFileContainer;
+        while ( container ) {
+            this.shortenContainerIdentifiers( container );
+
+            container = container.nextContainer;
+        }
     }
 
     private shortenContainerIdentifiers( container: Container ): void {
@@ -271,14 +195,14 @@ export class Minifier {
             let baseClassContainer = this.classifiableContainers[baseClass.name];
 
             if ( baseClassContainer ) {
-                let baseClassMembers = baseClassContainer.getMembers();
+                //let baseClassMembers = baseClassContainer.getMembers();
 
-                if ( baseClassMembers ) {
-                    this.processClassMembers( baseClassMembers, baseClassContainer );
+                //if ( baseClassMembers ) {
+                //    this.processClassMembers( baseClassMembers, baseClassContainer );
 
-                    // The base class container excludedProperties array must also be excluded in the current derived class
-                    container.excludedProperties = container.excludedProperties.concat( baseClassContainer.excludedProperties );
-                }
+                //    // The base class container excludedProperties array must also be excluded in the current derived class
+                //    container.excludedProperties = container.excludedProperties.concat( baseClassContainer.excludedProperties );
+                //}
             }
         }
 
@@ -286,17 +210,18 @@ export class Minifier {
         this.excludeNames( container );
 
         // Process container members..
-        let containerClassMembers = container.getMembers();
+        //let containerClassMembers = container.getMembers();
 
-        if ( containerClassMembers ) {
-            this.processClassMembers( containerClassMembers, container );
-        }
+        //if ( containerClassMembers ) {
+        //    this.processClassMembers( containerClassMembers, container );
+        //}
 
-        // Process container locals..
-        let containerLocals = container.getLocals();
-        if ( containerLocals ) {
-            this.processContainerLocals( containerLocals, container );
-        }
+        //// Process container locals..
+        //let containerLocals = container.getLocals();
+
+        //if ( containerLocals ) {
+        //    this.processContainerLocals( containerLocals, container );
+        //}
 
         // Process the containers identifiers...
         for ( let identifierTableKey in container.localIdentifiers ) {
@@ -309,31 +234,24 @@ export class Minifier {
 
         // TJT: Review..
 
-        for ( let classifiableKey in container.classifiableSymbols ) {
-            let classSymbol = container.classifiableSymbols[classifiableKey];
+        //for ( let classifiableKey in container.classifiableSymbols ) {
+        //    let classSymbol = container.classifiableSymbols[classifiableKey];
 
-            let classSymbolUId: string = Ast.getIdentifierUID( classSymbol );
-            let classIdentifierInfo = this.allIdentifierInfos[classSymbolUId];
+        //    let classSymbolUId: string = Ast.getIdentifierUID( classSymbol );
+        //    let classIdentifierInfo = this.identifiers[classSymbolUId];
 
-            this.processIdentifierInfo( classIdentifierInfo, container );
-        }
+        //    this.processIdentifierInfo( classIdentifierInfo, container );
+        //}
 
         // Recursively go through container children in order added
-        let containerChildren = container.getChildren();
+        //let containerChildren = container.getChildren();
 
-        for ( let j = 0; j < containerChildren.length; j++ ) {
-            this.shortenContainerIdentifiers( containerChildren[j] );
-        }
+        //for ( let j = 0; j < containerChildren.length; j++ ) {
+        //    this.shortenContainerIdentifiers( containerChildren[j] );
+        //}
     }
 
     private processIdentifierInfo( identifierInfo: IdentifierInfo, container: Container ): void {
-        if ( identifierInfo.getName() === 'classNodeU' ) {
-            var breakme4 = 1;
-        }
-        if ( identifierInfo.getName() === 'getHeritageExportProperties' ) {
-            var breakme4 = 1;
-        }
-
         if ( identifierInfo.isMinified ) {
             Logger.trace( "Identifier already has shortened name: ", identifierInfo.getName(), identifierInfo.shortenedName );
             return;
@@ -442,7 +360,7 @@ export class Minifier {
 
         // Find the start of the identifier text within the identifier character array
         for ( var identifierStart = identifier.pos + triviaOffset; identifierStart < identifier.pos + bufferLength; identifierStart++ ) {
-            if ( this.bundleSourceFile.text[identifierStart] === identifier.text[0] )
+            if ( this.sourceFile.text[identifierStart] === identifier.text[0] )
                 break;
         }
 
@@ -456,22 +374,8 @@ export class Minifier {
                 replaceChar = text[i];
             }
 
-            this.bundleSourceFile.text = Utils.replaceAt( this.bundleSourceFile.text, identifierStart + i, replaceChar );
+            this.sourceFile.text = Utils.replaceAt( this.sourceFile.text, identifierStart + i, replaceChar );
         }
-    }
-
-    private processContainerLocals( locals: ts.SymbolTable, container: Container ): void {
-        locals.forEach( local => {
-            let localSymbolUId: string = Ast.getIdentifierUID( ( <any>local.declarations[0] ).symbol );
-
-            if ( localSymbolUId ) {
-                let localIdentifierInfo = this.allIdentifierInfos[localSymbolUId];
-                this.processIdentifierInfo( localIdentifierInfo, container );
-            }
-            else {
-                Logger.warn( "Container local does not have a UId" );
-            }
-        } );
     }
 
     private processClassMembers( members: ts.NodeArray<ts.Declaration>, container: Container ): void {
@@ -482,30 +386,30 @@ export class Minifier {
             if ( memberSymbol ) {
                 let memberSymbolUId: string = Ast.getIdentifierUID( memberSymbol );
 
-                if ( memberSymbolUId ) {
-                    let memberIdentifierInfo = this.allIdentifierInfos[memberSymbolUId];
-                    let isExcludedProperty = false;
+                //if ( memberSymbolUId ) {
+                //    let memberIdentifierInfo = this.identifiers[memberSymbolUId];
+                //    let isExcludedProperty = false;
 
-                    for ( const excludedPropertyKey in container.excludedProperties ) {
-                        let memberIdentifierSymbol = memberIdentifierInfo.getSymbol();
-                        let excludedPropertySymbol = container.excludedProperties[excludedPropertyKey];
+                //    for ( const excludedPropertyKey in container.excludedProperties ) {
+                //        let memberIdentifierSymbol = memberIdentifierInfo.getSymbol();
+                //        let excludedPropertySymbol = container.excludedProperties[excludedPropertyKey];
 
-                        // TJT: Review - How to determine equality here. For now just use name which seems pretty naive.
-                        if ( memberIdentifierSymbol.name === excludedPropertySymbol.name ) {
-                            isExcludedProperty = true;
+                //        // TJT: Review - How to determine equality here. For now just use name which seems pretty naive.
+                //        if ( memberIdentifierSymbol.name === excludedPropertySymbol.name ) {
+                //            isExcludedProperty = true;
 
-                            memberIdentifierInfo.shortenedName = memberIdentifierInfo.getName();
-                            break;
-                        }
-                    }
+                //            memberIdentifierInfo.shortenedName = memberIdentifierInfo.getName();
+                //            break;
+                //        }
+                //    }
 
-                    if ( !isExcludedProperty ) {
-                        this.processIdentifierInfo( memberIdentifierInfo, container );
-                    }
-                }
-                else {
-                    Logger.warn( "Container member does not have a UId" );
-                }
+                //    if ( !isExcludedProperty ) {
+                //        this.processIdentifierInfo( memberIdentifierInfo, container );
+                //    }
+                //}
+                //else {
+                //    Logger.warn( "Container member does not have a UId" );
+                //}
             }
             else {
                 Logger.warn( "Container member does not have a symbol." );
@@ -519,31 +423,31 @@ export class Minifier {
         // If this container extends a base/parent class then we exclude the base class member names.
         let baseClass = container.getBaseClass();
 
-        if ( baseClass ) {
+        //if ( baseClass ) {
 
-            // We need to get the container for the parent/base class
-            let baseClassContainer = this.classifiableContainers[baseClass.name];
+        //    // We need to get the container for the parent/base class
+        //    let baseClassContainer = this.classifiableContainers[baseClass.name];
 
-            if ( baseClassContainer ) {
-                let baseClassMembers = baseClassContainer.getMembers();
+        //    if ( baseClassContainer ) {
+        //        let baseClassMembers = baseClassContainer.getMembers();
 
-                if ( baseClassMembers ) {
+        //        if ( baseClassMembers ) {
 
-                    // The base class members shortened names must be excluded from this child class
-                    for ( let memberKey in baseClassMembers ) {
-                        let member = baseClassMembers[memberKey];
-                        let memberSymbol = ( <any>member ).symbol;
-                        let memberSymbolUId: string = Ast.getIdentifierUID( memberSymbol );
+        //            // The base class members shortened names must be excluded from this child class
+        //            for ( let memberKey in baseClassMembers ) {
+        //                let member = baseClassMembers[memberKey];
+        //                let memberSymbol = ( <any>member ).symbol;
+        //                let memberSymbolUId: string = Ast.getIdentifierUID( memberSymbol );
 
-                        let excludedIdentifier = this.allIdentifierInfos[memberSymbolUId];
+        //                let excludedIdentifier = this.identifiers[memberSymbolUId];
 
-                        if ( excludedIdentifier && excludedIdentifier.shortenedName ) {
-                            container.namesExcluded[excludedIdentifier.shortenedName] = true;
-                        }
-                    }
-                }
-            }
-        }
+        //                if ( excludedIdentifier && excludedIdentifier.shortenedName ) {
+        //                    container.namesExcluded[excludedIdentifier.shortenedName] = true;
+        //                }
+        //            }
+        //        }
+        //    }
+        //}
 
         for ( let identifierInfoKey in container.localIdentifiers ) {
             let identifierInfo = container.localIdentifiers[identifierInfoKey];
@@ -551,16 +455,16 @@ export class Minifier {
             this.excludeNamesForIdentifier( identifierInfo, container );
         }
 
-        for ( let classifiableKey in container.classifiableSymbols ) {
-            let classSymbol = container.classifiableSymbols[classifiableKey];
+        //for ( let classifiableKey in container.classifiableSymbols ) {
+        //    let classSymbol = container.classifiableSymbols[classifiableKey];
 
-            let classSymbolUId: string = Ast.getIdentifierUID( classSymbol );
-            let classIdentifierInfo = this.allIdentifierInfos[classSymbolUId];
+        //    let classSymbolUId: string = Ast.getIdentifierUID( classSymbol );
+        //    let classIdentifierInfo = this.identifiers[classSymbolUId];
 
-            Debug.assert( classIdentifierInfo !== undefined, "Container classifiable identifier symbol not found." );
+        //    Debug.assert( classIdentifierInfo !== undefined, "Container classifiable identifier symbol not found." );
 
-            this.excludeNamesForIdentifier( classIdentifierInfo, container );
-        }
+        //    this.excludeNamesForIdentifier( classIdentifierInfo, container );
+        //}
     }
 
     private getContainerExcludedIdentifiers( container: Container ): ts.MapLike<IdentifierInfo> {
@@ -570,16 +474,16 @@ export class Minifier {
 
         function getContainerExcludes( container: Container ) {
             // Recursively process the container block scoped children..
-            let containerChildren = container.getChildren();
+            //let containerChildren = container.getChildren();
 
-            for ( let i = 0; i < containerChildren.length; i++ ) {
-                let childContainer = containerChildren[i];
+            //for ( let i = 0; i < containerChildren.length; i++ ) {
+            //    let childContainer = containerChildren[i];
 
-                // TJT: Review. Comments added in release 2.0
-                //if ( childContainer.isBlockScoped() ) {
-                getContainerExcludes( childContainer );
-                //}
-            }
+            //    // TJT: Review. Comments added in release 2.0
+            //    //if ( childContainer.isBlockScoped() ) {
+            //    getContainerExcludes( childContainer );
+            //    //}
+            //}
 
             // Get the excluded identifiers in this block scoped container..
 
@@ -603,9 +507,6 @@ export class Minifier {
     }
 
     private excludeNamesForIdentifier( identifierInfo: IdentifierInfo, container: Container ): void {
-        if ( identifierInfo.getName() === 'getHeritageExportProperties' ) {
-            var breakme4 = 1;
-        }
         // Exclude all shortened names that have already been used in child containers that this identifer is contained in.
         let identifierContainers = identifierInfo.getContainers();
 
@@ -626,66 +527,6 @@ export class Minifier {
         }
     }
 
-    //private isNextContainer( node: ts.Node ): boolean {
-    //    let containerFlags: Ast.ContainerFlags = Ast.getContainerFlags( node );
-
-    //    if ( containerFlags & ( Ast.ContainerFlags.IsContainer | Ast.ContainerFlags.IsBlockScopedContainer ) ) {
-    //        let nextContainer = new Container( node )
-
-    //        // Check if the container symbol is classifiable. If so save it for inheritance processing.
-    //        let containerSymbol: ts.Symbol = (<any>node).symbol;
-
-    //        if ( containerSymbol && ( containerSymbol.flags & ts.SymbolFlags.Class ) ) {
-    //            let containerSymbolUId: string = Ast.getIdentifierUID( containerSymbol );
-
-    //            // Save the class symbol into the current container ( its parent )
-    //            if ( !Utils.hasProperty( this.currentContainer().classifiableSymbols, containerSymbolUId ) ) {
-    //                this.currentContainer().classifiableSymbols[ containerSymbolUId ] = containerSymbol;
-    //            }
-
-    //            // Save to the all classifiable containers table. See NOTE Inheritance below.
-    //            if ( !Utils.hasProperty( this.classifiableContainers, containerSymbol.name ) ) {
-    //                this.classifiableContainers[ containerSymbol.name ] = nextContainer;
-    //            }
-
-    //            // Check for inheritance. We need to do this now because the checker cannot be used once names are shortened.
-    //            let extendsClause = Ast.getExtendsClause( node )
-
-    //            if ( extendsClause ) {
-    //                let baseClassSymbol = this.checker.getSymbolAtLocation( <ts.Identifier>extendsClause.types[0].expression );
-
-    //                // NOTE Inheritance:
-    //                // If this child class is declared before the parent base class then the base class symbol will have symbolFlags.Merged.
-    //                // When the base class is declared it will have a different symbol id from the symbol id determined here.
-    //                // We should be able to use the symbol name for lookups in the classifiable containers table.
-    //                // let baseClassAlias = this.checker.getAliasedSymbol(baseClassSymbol);
-
-    //                nextContainer.setBaseClass( baseClassSymbol );
-    //            }
-    //        }
-
-    //        // Before changing the current container we must first add the new container to the children of the current container.
-    //        let currentContainer = this.currentContainer();
-
-    //        // If we don't have a container yet then it is the source file container ( the first ).
-    //        if ( !currentContainer ) {
-    //            this.sourceFileContainer = nextContainer;
-    //        }
-    //        else {
-    //            // Add new container context to the exising current container
-    //            currentContainer.addChildContainer( nextContainer );
-    //        }
-
-    //        this.containerStack.push( nextContainer );
-
-    //        Logger.info( "Next container id: ", nextContainer.getId(), nextContainer.getParent().getId() );
-
-    //        return true;
-    //    }
-
-    //    return false;
-    //}
-
     private reportMinifyStatistics() {
         let statisticsReporter = new StatisticsReporter();
 
@@ -694,7 +535,15 @@ export class Minifier {
         statisticsReporter.reportCount( "Identifiers shortened", this.shortenedIdentifierCount );
     }
 
-    //private prettify( input: string ): string {
-    //    return format( input );
-    //}
+    private gerb(): void {
+        // We can't shorten identifier names that are 1 character in length AND
+        // we can't risk the chance that an identifier name will be replaced with a 2 char
+        // shortened name due to the constraint that the names are changed in place
+        //    let identifierName = identifierSymbol.getName();
+
+        //    if ( identifierName.length === 1 ) {
+        //        identifierInfo.shortenedName = identifierName;
+        //        this.excludedIdentifiers[identifierUID] = identifierInfo;
+        //    }
+    }
 }

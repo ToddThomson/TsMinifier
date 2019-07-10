@@ -8,6 +8,9 @@
     <SccProvider>SAK</SccProvider>
     <SccAuxPath>SAK</SccAuxPath>
     <SccLocalPath>SAK</SccLocalPath>
+    <JavaScriptTestFramework>mocha</JavaScriptTestFramework>
+    <SaveNodeJsSettingsInProjectFile>True</SaveNodeJsSettingsInProjectFile>
+    <JavaScriptTestRoot>tests\spec\</JavaScriptTestRoot>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -15,7 +18,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>de8db710-69b5-4caf-bad9-a688b42d2395</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>tests\run.ts</StartupFile>
+    <StartupFile>tests\projects\run.ts</StartupFile>
     <StartWebBrowser>False</StartWebBrowser>
     <SearchPath>
     </SearchPath>
@@ -24,7 +27,7 @@
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <ProjectTypeGuids>{3AF33F2E-1136-4D97-BBB7-1795711AC8B8};{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}</ProjectTypeGuids>
     <EnableTypeScript>true</EnableTypeScript>
-    <StartWebBrowser>false</StartWebBrowser>
+    <StartWebBrowser>False</StartWebBrowser>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -41,23 +44,27 @@
     <Content Include="build\tasks\bundle.js" />
     <Content Include="build\tasks\clean.js" />
     <Content Include="build\tasks\release.js" />
+    <Content Include="build\tasks\test.js" />
     <Content Include="gulpfile.js" />
     <Content Include="lib\TsMinifier.js" />
     <Content Include="LICENSE" />
     <Content Include="package.json" />
     <Content Include="README.md" />
     <Content Include="src\tsconfig.json" />
+    <Content Include="tests\projects\simple\tsconfig.json" />
     <Content Include="tests\tsconfig.json" />
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="lib\TsMinifier.d.ts" />
+    <TypeScriptCompile Include="src\Minifier\IdentifierInfoCollection.ts" />
     <TypeScriptCompile Include="src\Minifier\MinifierResult.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="src\Minifier\MinifierTransform.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
-    <TypeScriptCompile Include="tests\run.ts" />
+    <TypeScriptCompile Include="src\Minifier\WhitespaceTransform.ts" />
+    <TypeScriptCompile Include="tests\projects\run.ts" />
     <TypeScriptCompile Include="src\Minifier\ContainerContext.ts" />
     <TypeScriptCompile Include="src\Minifier\IdentifierInfo.ts" />
     <TypeScriptCompile Include="src\Minifier\Minifier.ts" />
@@ -65,6 +72,11 @@
     <TypeScriptCompile Include="src\Minifier\MinifierStatistics.ts" />
     <TypeScriptCompile Include="src\Minifier\NameGenerator.ts" />
     <TypeScriptCompile Include="src\TsMinifier.ts" />
+    <TypeScriptCompile Include="tests\projects\simple\GreeterModule.ts" />
+    <TypeScriptCompile Include="tests\projects\simple\main.ts" />
+    <TypeScriptCompile Include="tests\spec\MinifierTransform\MinifierTransformTest.ts">
+      <TestFramework>Mocha</TestFramework>
+    </TypeScriptCompile>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="build\" />
@@ -73,6 +85,10 @@
     <Folder Include="tests\" />
     <Folder Include="src\" />
     <Folder Include="src\Minifier\" />
+    <Folder Include="tests\projects\" />
+    <Folder Include="tests\projects\simple\" />
+    <Folder Include="tests\spec\" />
+    <Folder Include="tests\spec\MinifierTransform\" />
   </ItemGroup>
   <Import Project="$(VSToolsPath)\Node.js Tools\Microsoft.NodejsToolsV2.targets" />
   <ProjectExtensions>

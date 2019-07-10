@@ -1,10 +1,10 @@
 ﻿import * as ts from "typescript";
 import { Container } from "./ContainerContext";
 import { MinifierOptions } from "./MinifierOptions";
-import { Ast } from "@TsToolsCommon/Ast/Ast";
-import { Utils } from "@TsToolsCommon/Utils/Utilities";
-import { TsCore } from "@TsToolsCommon/Utils/TsCore";
-import { Logger } from "@TsToolsCommon/Reporting/Logger";
+import { Ast } from "../../../TsToolsCommon/src/Ast/Ast";
+import { Utils } from "../../../TsToolsCommon/src/Utils/Utilities";
+import { TsCore } from "../../../TsToolsCommon/src/Utils/TsCore";
+import { Logger } from "../../../TsToolsCommon/src/Reporting/Logger";
 
 export class IdentifierInfo {
     private identifier: ts.Identifier;
@@ -15,11 +15,10 @@ export class IdentifierInfo {
     public shortenedName: string = undefined;
     public isMinified: boolean = false;
 
-    constructor( identifier: ts.Identifier, symbol: ts.Symbol, container: Container ) {
-        this.identifier = identifier;
+    constructor( node: ts.Node, symbol: ts.Symbol ) {
+        this.identifier = node as ts.Identifier;
         this.symbol = symbol;
-        this.identifiers = [identifier];
-        this.containers[container.getId().toString()] = container;
+        this.identifiers = [this.identifier];
     }
 
     public getSymbol(): ts.Symbol {
@@ -48,10 +47,11 @@ export class IdentifierInfo {
         return this.identifiers;
     }
 
-    public addRef( identifier: ts.Identifier, container: Container ): void {
-        // Add the identifier (node) reference
+    public addNodeReference( identifier: ts.Identifier ) {
         this.identifiers.push( identifier );
+    }
 
+    public addContainerReference( container: Container ): void {
         // We only need to keep track of a single reference in a container
         if ( !Utils.hasProperty( this.containers, container.getId().toString() ) ) {
             this.containers[ container.getId().toString() ] = container;

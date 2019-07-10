@@ -3,8 +3,8 @@
     "target": "es5",
     "module": "commonjs",
     "declaration": false,
-    "noLib": false,
     "sourceMap": true,
+    "noLib": false,
     "pretty": true,
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
@@ -16,18 +16,10 @@
       "./node_modules"
     ],
     "types": [
-      "node"
+      "node",
+      "mocha"
     ]
   },
 
-  "include": [
-    "./**/*.ts"
-  ],
-
-  "exclude": [
-    "../node_modules",
-    "../dist",
-    "../src"
-  ],
   "compileOnSave": true
 }

@@ -1,5 +1,5 @@
 import * as ts from "typescript";
-import { CompilerOutput } from "ts2js";
+import { CompileOutput } from "ts2js";
 interface MinifierOptions {
     mangleIdentifiers?: boolean;
     removeWhitespace?: boolean;
@@ -8,13 +8,15 @@ interface MinifierOptions {
 interface MinifierResult {
     emitSkipped: boolean;
     diagnostics: ReadonlyArray<ts.Diagnostic>;
-    emitOutput?: CompilerOutput[];
+    emitOutput?: CompileOutput[];
 }
 export { MinifierOptions };
 export { MinifierResult };
 export declare namespace TsMinifier {
-    function minify(fileNames: string[], compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions): MinifierResult;
-    function minifyModule(input: string, moduleFileName: string, compilerOptions: ts.CompilerOptions, minifierOptions: MinifierOptions): MinifierResult;
-    function minifyProject(configFilePath: string, minifierOptions: MinifierOptions): MinifierResult;
+    function getMinifierTransform(program: ts.Program, options?: MinifierOptions): ts.TransformerFactory<ts.SourceFile>;
+    function getWhitespaceTransform(program: ts.Program, options?: MinifierOptions): ts.TransformerFactory<ts.SourceFile>;
+    function minify(fileNames: string[], compilerOptions: ts.CompilerOptions, minifierOptions?: MinifierOptions): MinifierResult;
+    function minifyModule(input: string, moduleFileName: string, compilerOptions: ts.CompilerOptions, minifierOptions?: MinifierOptions): MinifierResult;
+    function minifyProject(configFilePath: string, minifierOptions?: MinifierOptions): MinifierResult;
     function prettify(input: string): string;
 }
