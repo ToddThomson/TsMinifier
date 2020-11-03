@@ -1527,7 +1527,8 @@ var Minifier = /** @class */ (function () {
                 break;
         }
         // Replace the identifier text within the bundle source file
-        identifier.end = identifierStart + text.length;
+        // FIXME:
+        //identifier.end = identifierStart + text.length;
         for (var i = 0; i < identifierLength; i++) {
             var replaceChar = " ";
             if (i < text.length) {
@@ -1829,7 +1830,7 @@ var WhitespaceMinifier = /** @class */ (function () {
         }
         this.whiteSpaceAfter = output.length;
         this.whiteSpaceTime = new Date().getTime() - this.whiteSpaceTime;
-        // REVIEW:
+        // FIXME:
         //if ( this.compilerOptions.diagnostics )
         //    this.reportWhitespaceStatistics();
         return jsContents; // output;

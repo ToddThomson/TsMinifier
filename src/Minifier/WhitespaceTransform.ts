@@ -1,5 +1,5 @@
 ﻿import * as ts from "typescript";
-import { Ast } from "../../../TsToolsCommon/src/Ast/Ast"
+import { Ast } from "../../../TsToolsCommon/src/typescript/AstHelpers"
 
 export function getWhitespaceTransform(): ts.TransformerFactory<ts.SourceFile> {
     return ( context: ts.TransformationContext ) => whitespaceTransform( context );
@@ -197,7 +197,7 @@ export class WhitespaceMinifier {
         this.whiteSpaceAfter = output.length;
         this.whiteSpaceTime = new Date().getTime() - this.whiteSpaceTime;
 
-        // FIXME:
+        // REVIEW:
         //if ( this.compilerOptions.diagnostics )
         //    this.reportWhitespaceStatistics();
         

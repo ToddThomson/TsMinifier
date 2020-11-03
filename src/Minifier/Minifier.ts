@@ -5,12 +5,13 @@ import { IdentifierInfo } from "./IdentifierInfo";
 import { IdentifierCollection } from "./IdentifierInfoCollection";
 import { MinifierOptions } from "./MinifierOptions";
 import { MinifierStatistics } from "./MinifierStatistics";
-import { Ast } from "../../../TsToolsCommon/src/Ast/Ast";
+import { Ast } from "../../../TsToolsCommon/src/typescript/AstHelpers";
+import { TsCore } from "../../../TsToolsCommon/src/typescript/Core";
 import { StatisticsReporter } from "../../../TsToolsCommon/src/Reporting/StatisticsReporter";
 import { Logger } from "../../../TsToolsCommon/src/Reporting/Logger";
 import { Debug } from "../../../TsToolsCommon/src/Utils/Debug";
 import { Utils } from "../../../TsToolsCommon/src/Utils/Utilities";
-import { TsCore } from "../../../TsToolsCommon/src/Utils/TsCore";
+
 
 export class Minifier {
     private sourceFile: ts.SourceFile;
@@ -72,7 +73,7 @@ export class Minifier {
 
     private replaceIdentifiersNamedOldNameWithNewName2( context: ts.TransformationContext ) {
         const visitor: ts.Visitor = ( node: ts.Node ) => {
-            if ( TsCore.isIdentifier( node ) ) {
+            if ( Ast.isIdentifier( node ) ) {
                 
                 return ts.createIdentifier( "newName" );
             }
@@ -365,7 +366,7 @@ export class Minifier {
         }
 
         // Replace the identifier text within the bundle source file
-        identifier.end = identifierStart + text.length;
+        (identifier as ts.TextRange ).end = identifierStart + text.length;
 
         for ( var i = 0; i < identifierLength; i++ ) {
             let replaceChar = " ";

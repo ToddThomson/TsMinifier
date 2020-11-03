@@ -1,9 +1,9 @@
 ﻿import * as ts from "typescript";
 import { Container } from "./ContainerContext";
 import { MinifierOptions } from "./MinifierOptions";
-import { Ast } from "../../../TsToolsCommon/src/Ast/Ast";
+import { Ast } from "../../../TsToolsCommon/src/typescript/AstHelpers";
 import { Utils } from "../../../TsToolsCommon/src/Utils/Utilities";
-import { TsCore } from "../../../TsToolsCommon/src/Utils/TsCore";
+import { TsCore } from "../../../TsToolsCommon/src/Typescript/Core";
 import { Logger } from "../../../TsToolsCommon/src/Reporting/Logger";
 
 export class IdentifierInfo {

@@ -1,10 +1,10 @@
 ﻿import * as ts from "typescript";
 import { IdentifierInfo } from "./IdentifierInfo"
 import { IdentifierCollection } from "./IdentifierInfoCollection"
-import { Ast } from "../../../TsToolsCommon/src/Ast/Ast"
+import { Ast } from "../../../TsToolsCommon/src/typescript/AstHelpers"
+import { TsCore } from "../../../TsToolsCommon/src/typescript/Core";
 import { Logger } from "../../../TsToolsCommon/src/Reporting/Logger";
 import { Utils } from "../../../TsToolsCommon/src/Utils/Utilities";
-import { TsCore } from "../../../TsToolsCommon/src/Utils/TsCore";
 
 class ContainerIdGenerator {
     static nextId = 1;
@@ -188,7 +188,7 @@ export class Container {
 
     private forEachReference( node: ts.Node, checker: ts.TypeChecker, onReference: ( s: ts.Symbol ) => void ) {
         node.forEachChild( function cb( node ) {
-            if ( TsCore.isIdentifier( node ) ) {
+            if ( Ast.isIdentifier( node ) ) {
                 const sym = checker.getSymbolAtLocation( node );
                 if ( sym ) onReference( sym );
             }

@@ -38,6 +38,7 @@
   <ItemGroup>
     <Content Include=".gitattributes" />
     <Content Include=".gitignore" />
+    <Content Include=".mocharc.json" />
     <Content Include=".npmignore" />
     <Content Include=".travis.yml" />
     <Content Include="build\paths.js" />
@@ -45,6 +46,8 @@
     <Content Include="build\tasks\clean.js" />
     <Content Include="build\tasks\release.js" />
     <Content Include="build\tasks\test.js" />
+    <Content Include="bundle\tsminifier.js" />
+    <Content Include="bundle\tsminifier.js.map" />
     <Content Include="gulpfile.js" />
     <Content Include="lib\TsMinifier.js" />
     <Content Include="LICENSE" />
@@ -55,6 +58,8 @@
     <Content Include="tests\tsconfig.json" />
   </ItemGroup>
   <ItemGroup>
+    <TypeScriptCompile Include="bundle\tsminifier.d.ts" />
+    <TypeScriptCompile Include="bundle\tsminifier.ts" />
     <TypeScriptCompile Include="lib\TsMinifier.d.ts" />
     <TypeScriptCompile Include="src\Minifier\IdentifierInfoCollection.ts" />
     <TypeScriptCompile Include="src\Minifier\MinifierResult.ts">
@@ -81,6 +86,7 @@
   <ItemGroup>
     <Folder Include="build\" />
     <Folder Include="build\tasks\" />
+    <Folder Include="bundle\" />
     <Folder Include="lib\" />
     <Folder Include="tests\" />
     <Folder Include="src\" />

@@ -1,6 +1,6 @@
 ﻿import * as ts from "typescript";
 import * as tsc from "ts2js";
-import { TsCore } from "../../TsToolsCommon/src/Utils/TsCore"
+import { TsCore } from "../../TsToolsCommon/src/typescript/Core"
 import { Minifier } from "./Minifier/Minifier";
 import { MinifierOptions } from "./Minifier/MinifierOptions";
 import { MinifierResult } from "./Minifier/MinifierResult";
@@ -14,6 +14,14 @@ export { MinifierResult };
 
 export namespace TsMinifier {
 
+    /**
+    * Gets the TsMinifier identifier minification transformation callback function
+    * used to minify a source file identifiers.
+    *
+    * @param program Optional
+    * @param options Optional bundler options.
+    * @returns The bundler transform factory callback function.
+    */
     export function getMinifierTransform( program: ts.Program, options?: MinifierOptions ): ts.TransformerFactory<ts.SourceFile> {
         const minifierTransform = new MinifierTransform( options );
         return ( context: ts.TransformationContext ) => minifierTransform.transform( program, context );

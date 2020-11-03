@@ -7,7 +7,6 @@
     "moduleResolution": "node",
     "declaration": true,
     "sourceMap": true,
-    "diagnostics": true,
     "listFiles": false,
     "pretty": true,
     "skipLibCheck": true,
