@@ -46,8 +46,30 @@
     <Content Include="build\tasks\clean.js" />
     <Content Include="build\tasks\release.js" />
     <Content Include="build\tasks\test.js" />
-    <Content Include="bundle\tsminifier.js" />
-    <Content Include="bundle\tsminifier.js.map" />
+    <Content Include="built\src\bundle\tsminifier.js" />
+    <Content Include="built\src\bundle\tsminifier.js.map" />
+    <Content Include="built\src\Minifier\ContainerContext.js" />
+    <Content Include="built\src\Minifier\ContainerContext.js.map" />
+    <Content Include="built\src\Minifier\IdentifierInfo.js" />
+    <Content Include="built\src\Minifier\IdentifierInfo.js.map" />
+    <Content Include="built\src\Minifier\IdentifierInfoCollection.js" />
+    <Content Include="built\src\Minifier\IdentifierInfoCollection.js.map" />
+    <Content Include="built\src\Minifier\Minifier.js" />
+    <Content Include="built\src\Minifier\Minifier.js.map" />
+    <Content Include="built\src\Minifier\MinifierOptions.js" />
+    <Content Include="built\src\Minifier\MinifierOptions.js.map" />
+    <Content Include="built\src\Minifier\MinifierResult.js" />
+    <Content Include="built\src\Minifier\MinifierResult.js.map" />
+    <Content Include="built\src\Minifier\MinifierStatistics.js" />
+    <Content Include="built\src\Minifier\MinifierStatistics.js.map" />
+    <Content Include="built\src\Minifier\MinifierTransform.js" />
+    <Content Include="built\src\Minifier\MinifierTransform.js.map" />
+    <Content Include="built\src\Minifier\NameGenerator.js" />
+    <Content Include="built\src\Minifier\NameGenerator.js.map" />
+    <Content Include="built\src\Minifier\WhitespaceTransform.js" />
+    <Content Include="built\src\Minifier\WhitespaceTransform.js.map" />
+    <Content Include="built\src\TsMinifier.js" />
+    <Content Include="built\src\TsMinifier.js.map" />
     <Content Include="gulpfile.js" />
     <Content Include="lib\TsMinifier.js" />
     <Content Include="LICENSE" />
@@ -58,8 +80,19 @@
     <Content Include="tests\tsconfig.json" />
   </ItemGroup>
   <ItemGroup>
-    <TypeScriptCompile Include="bundle\tsminifier.d.ts" />
-    <TypeScriptCompile Include="bundle\tsminifier.ts" />
+    <TypeScriptCompile Include="built\src\bundle\tsminifier.d.ts" />
+    <TypeScriptCompile Include="built\src\bundle\tsminifier.ts" />
+    <TypeScriptCompile Include="built\src\Minifier\ContainerContext.d.ts" />
+    <TypeScriptCompile Include="built\src\Minifier\IdentifierInfo.d.ts" />
+    <TypeScriptCompile Include="built\src\Minifier\IdentifierInfoCollection.d.ts" />
+    <TypeScriptCompile Include="built\src\Minifier\Minifier.d.ts" />
+    <TypeScriptCompile Include="built\src\Minifier\MinifierOptions.d.ts" />
+    <TypeScriptCompile Include="built\src\Minifier\MinifierResult.d.ts" />
+    <TypeScriptCompile Include="built\src\Minifier\MinifierStatistics.d.ts" />
+    <TypeScriptCompile Include="built\src\Minifier\MinifierTransform.d.ts" />
+    <TypeScriptCompile Include="built\src\Minifier\NameGenerator.d.ts" />
+    <TypeScriptCompile Include="built\src\Minifier\WhitespaceTransform.d.ts" />
+    <TypeScriptCompile Include="built\src\TsMinifier.d.ts" />
     <TypeScriptCompile Include="lib\TsMinifier.d.ts" />
     <TypeScriptCompile Include="src\Minifier\IdentifierInfoCollection.ts" />
     <TypeScriptCompile Include="src\Minifier\MinifierResult.ts">
@@ -86,7 +119,10 @@
   <ItemGroup>
     <Folder Include="build\" />
     <Folder Include="build\tasks\" />
-    <Folder Include="bundle\" />
+    <Folder Include="built\" />
+    <Folder Include="built\src\" />
+    <Folder Include="built\src\bundle\" />
+    <Folder Include="built\src\Minifier\" />
     <Folder Include="lib\" />
     <Folder Include="tests\" />
     <Folder Include="src\" />
