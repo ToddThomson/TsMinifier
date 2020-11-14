@@ -1,34 +1,33 @@
 {
   "name": "tsminifier",
-  "version": "4.0.0-beta.1",
+  "version": "4.1.0-dev.1",
   "author": "Todd Thomson <todd.thomson@me.com>",
   "description": "Typescript minifier providing identifier mangling and whitespace removal.",
   "license": "MIT",
-  "main": "./lib/tsminifier.js",
-  "types": "./lib/tsminifier.d.ts",
-  "typings": "./lib/tsminifier.d.ts",
+  "main": "./lib/TsMinifier.js",
+  "types": "./lib/TsMinifier.d.ts",
+  "typings": "./lib/TsMinifier.d.ts",
   "engines": {
     "node": ">= 14.0.0"
   },
   "dependencies": {
-    "@types/node": "^14.14.6",
+    "@types/node": "^14.14.7",
     "@types/prettier": "^2.1.5",
     "chalk": "^4.1.0",
     "prettier": "^2.1.2",
-    "ts2js": "^4.0.0-beta.1",
-    "typescript": "^4.0.5"
+    "ts2js": "^4.1.0-dev.1",
+    "typescript": "^4.1.1-rc"
   },
   "devDependencies": {
     "@types/chai": "^4.2.14",
     "@types/mocha": "^8.0.3",
     "chai": "^4.2.0",
-    "chalk": "^4.1.0",
     "del": "^6.0.0",
     "gulp": "^4.0.2",
     "gulp-hub": "^4.2.0",
     "gulp-mocha": "^7.0.2",
     "mocha": "^8.2.1",
-    "tsproject": "^4.0.0-beta.3",
+    "tsproject": "^4.1.0-dev.1",
     "vinyl-paths": "^3.0.1"
   },
   "keywords": [
@@ -49,9 +48,7 @@
   },
   "bugs": "https://github.com/toddthomson/tsminifier/issues",
   "scripts": {
-    "tsc-build": "tsc --build ./src ",
-    "tsc-clean": "tsc --build ./src --clean",
-    "build": "tsc --build ./src",
-    "clean": "tsc --build ./src --clean"
+    "build": "tsc --build ./src && gulp build",
+    "clean": "tsc --build ./src --clean && gulp clean"
   }
 }
